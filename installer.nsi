@@ -3,10 +3,12 @@
 !include "FileFunc.nsh"
 
 Name "PartX File Splitter & Joiner"
-OutFile "dist\PartX-Setup-1.0.0.exe"
+OutFile "dist\PartX-Setup-Signed-1.0.0.exe"
 InstallDir "$LOCALAPPDATA\Programs\PartX"
 RequestExecutionLevel user
 SetCompressor /SOLID lzma
+CRCCheck off
+
 
 ; Interface Configuration
 !define MUI_ABORTWARNING

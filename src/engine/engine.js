@@ -75,15 +75,16 @@ class OperationController {
 function getFreeDiskSpace(targetPath) {
   try {
     const resolvedPath = path.resolve(targetPath);
-    const rootDrive = path.parse(resolvedPath).root.replace('\\', '');
-    const cmd = `powershell -NoProfile -Command "(Get-PSDrive -Name '${rootDrive.replace(':', '')}').Free"`;
-    const stdout = execSync(cmd, { encoding: 'utf8', timeout: 5000 }).trim();
-    const freeBytes = parseInt(stdout, 10);
-    return isNaN(freeBytes) ? null : freeBytes;
+    if (fs.statfsSync) {
+      const stats = fs.statfsSync(resolvedPath);
+      return stats.bavail * stats.bsize;
+    }
+    return null;
   } catch {
     return null;
   }
 }
+
 
 /**
  * Formats byte size into human readable string

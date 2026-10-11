@@ -58,7 +58,14 @@ function createWindow() {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+    if (activeController) {
+      try { activeController.cancel(); } catch (_) {}
+    }
     app.quit();
+    setTimeout(() => {
+      app.exit(0);
+      process.exit(0);
+    }, 150);
   });
 }
 
@@ -72,13 +79,16 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   app.quit();
+  app.exit(0);
+  process.exit(0);
 });
 
 app.on('will-quit', () => {
   if (activeController) {
-    activeController.cancel();
+    try { activeController.cancel(); } catch (_) {}
   }
 });
+
 
 
 // --- IPC HANDLERS ---
