@@ -20,8 +20,8 @@ CRCCheck off
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
-!define MUI_FINISHPAGE_RUN "$INSTDIR\PartX File Splitter & Joiner.exe"
-!define MUI_FINISHPAGE_RUN_TEXT "Launch PartX File Splitter & Joiner"
+!define MUI_FINISHPAGE_RUN "$INSTDIR\PartX.exe"
+!define MUI_FINISHPAGE_RUN_TEXT "Launch PartX"
 !insertmacro MUI_PAGE_FINISH
 
 !insertmacro MUI_UNPAGE_CONFIRM
@@ -35,8 +35,8 @@ Section "Install"
 
   ; Create Shortcuts
   CreateDirectory "$SMPROGRAMS\PartX"
-  CreateShortcut "$SMPROGRAMS\PartX\PartX File Splitter.lnk" "$INSTDIR\PartX File Splitter & Joiner.exe"
-  CreateShortcut "$DESKTOP\PartX File Splitter.lnk" "$INSTDIR\PartX File Splitter & Joiner.exe"
+  CreateShortcut "$SMPROGRAMS\PartX\PartX.lnk" "$INSTDIR\PartX.exe"
+  CreateShortcut "$DESKTOP\PartX.lnk" "$INSTDIR\PartX.exe"
 
   ; Write Uninstaller
   WriteUninstaller "$INSTDIR\Uninstall.exe"
@@ -45,10 +45,11 @@ Section "Install"
   ; Registry Keys for Windows Add/Remove Programs
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\PartX" "DisplayName" "PartX File Splitter & Joiner"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\PartX" "UninstallString" '"$INSTDIR\Uninstall.exe"'
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\PartX" "DisplayIcon" '"$INSTDIR\PartX File Splitter & Joiner.exe"'
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\PartX" "DisplayIcon" '"$INSTDIR\PartX.exe"'
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\PartX" "DisplayVersion" "1.0.0"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\PartX" "Publisher" "PartX Community"
 SectionEnd
+
 
 Section "Uninstall"
   RMDir /r "$INSTDIR"

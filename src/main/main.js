@@ -14,18 +14,19 @@ const {
 let mainWindow = null;
 let activeController = null;
 
-// Single instance lock to prevent duplicate conflicting instances
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
-  app.quit();
+  app.exit(0);
 } else {
   app.on('second-instance', () => {
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
       mainWindow.focus();
     }
   });
 }
+
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -35,25 +36,22 @@ function createWindow() {
     minHeight: 620,
     title: 'PartX - File Splitter & Joiner',
     backgroundColor: '#0f172a',
-    titleBarStyle: 'hidden',
-    titleBarOverlay: {
-      color: '#0f172a',
-      symbolColor: '#94a3b8',
-      height: 38
-    },
+    show: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false
-    },
-    show: false
+    }
   });
 
-  mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+  const indexPath = path.join(__dirname, '../renderer/index.html');
+  mainWindow.loadFile(indexPath).catch(err => {
+    console.error('Failed to load file:', err);
+  });
 
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('Failed to load:', errorCode, errorDescription);
   });
 
   mainWindow.on('closed', () => {
@@ -61,27 +59,24 @@ function createWindow() {
     if (activeController) {
       try { activeController.cancel(); } catch (_) {}
     }
-    app.quit();
-    setTimeout(() => {
-      app.exit(0);
-      process.exit(0);
-    }, 150);
+    app.exit(0);
   });
 }
 
-app.whenReady().then(() => {
-  createWindow();
+if (gotTheLock) {
+  app.whenReady().then(() => {
+    createWindow();
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    });
   });
-});
 
-app.on('window-all-closed', () => {
-  app.quit();
-  app.exit(0);
-  process.exit(0);
-});
+  app.on('window-all-closed', () => {
+    app.exit(0);
+  });
+}
+
 
 app.on('will-quit', () => {
   if (activeController) {
