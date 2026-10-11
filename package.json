@@ -1,0 +1,39 @@
+{
+  "name": "partx-file-splitter",
+  "version": "1.0.0",
+  "description": "Modern, high-performance Fluent Design File Splitter & Joiner for Windows with SHA-256 verification.",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node tests/engine.test.js",
+    "build:win": "electron-builder --win"
+  },
+  "keywords": [
+    "file-splitter",
+    "file-joiner",
+    "fluent-design",
+    "electron",
+    "checksum",
+    "sha256",
+    "windows-tools"
+  ],
+  "author": "Open Source Community",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.partx.filesplitter",
+    "productName": "PartX File Splitter & Joiner",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    }
+  }
+}

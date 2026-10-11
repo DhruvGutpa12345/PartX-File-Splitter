@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PartX - File Splitter & Joiner</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Window Drag Titlebar -->
+  <header class="titlebar">
+    <div class="titlebar-brand">
+      <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="8" y1="13" x2="16" y2="13"></line>
+        <line x1="12" y1="9" x2="12" y2="17"></line>
+      </svg>
+      <span>PartX File Splitter &amp; Joiner</span>
+    </div>
+    <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Theme (Dark / Light)">
+      <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <!-- Sun icon default for dark mode -->
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>
+    </button>
+  </header>
+
+  <!-- Mode Selector Tabs -->
+  <nav class="tab-navigation">
+    <button id="tabSplitBtn" class="tab-btn active">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="16" y1="3" x2="16" y2="21"></line>
+        <line x1="8" y1="3" x2="8" y2="21"></line>
+        <rect x="2" y="3" width="20" height="18" rx="2"></rect>
+      </svg>
+      Split File
+    </button>
+    <button id="tabJoinBtn" class="tab-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+      </svg>
+      Join / Recombine Files
+    </button>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="app-container">
+    <!-- ==================== SPLIT TAB ==================== -->
+    <section id="splitTab" class="tab-content active">
+      <!-- File Selector Card -->
+      <div class="card">
+        <div class="card-title">
+          <span>1. Select Source File</span>
+        </div>
+        <div id="splitDropzone" class="dropzone">
+          <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <div class="dropzone-text">Drag &amp; drop any file here, or click to browse</div>
+          <div class="dropzone-hint">Supports any file format (ISO, ZIP, Video, Datasets, Archives, Virtual Disks)</div>
+        </div>
+
+        <div id="splitFileBadge" class="file-badge">
+          <div class="file-info">
+            <div id="splitFileName" class="file-name">filename.ext</div>
+            <div id="splitFileMeta" class="file-meta">0 MB • C:\path\to\file</div>
+          </div>
+          <button id="clearSplitFileBtn" class="btn-icon" title="Clear selection">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Split Options Card -->
+      <div class="card">
+        <div class="card-title">
+          <span>2. Splitting Configuration</span>
+        </div>
+        <div class="form-grid">
+          <!-- Split Method -->
+          <div class="form-group">
+            <label>Split Method</label>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" name="splitMode" value="size" checked>
+                By Chunk Size
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="splitMode" value="count">
+                By Number of Parts
+              </label>
+            </div>
+          </div>
+
+          <!-- Part Naming Scheme -->
+          <div class="form-group">
+            <label>Naming Scheme</label>
+            <select id="namingSchemeSelect">
+              <option value="numeric">Numeric Extension (.001, .002, .003) [Standard]</option>
+              <option value="part">Part Extension (.part1, .part2, .part3)</option>
+            </select>
+          </div>
+
+          <!-- Chunk Size Setting -->
+          <div id="chunkSizeGroup" class="form-group">
+            <label>Chunk Size</label>
+            <div class="input-with-button">
+              <input type="number" id="chunkSizeInput" value="100" min="1" step="1">
+              <select id="chunkSizeUnit" style="max-width: 90px;">
+                <option value="MB" selected>MB</option>
+                <option value="GB">GB</option>
+                <option value="KB">KB</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Part Count Setting -->
+          <div id="partsCountGroup" class="form-group" style="display: none;">
+            <label>Number of Equal Parts</label>
+            <input type="number" id="partsCountInput" value="2" min="2" max="9999" step="1">
+          </div>
+
+          <!-- Target Output Directory -->
+          <div class="form-group full-width">
+            <label>Output Directory</label>
+            <div class="input-with-button">
+              <input type="text" id="splitOutputDirInput" placeholder="Select destination folder...">
+              <button id="browseSplitOutputDirBtn" class="btn btn-secondary">Browse...</button>
+            </div>
+          </div>
+
+          <!-- Manifest Option -->
+          <div class="form-group full-width">
+            <label class="checkbox-label">
+              <input type="checkbox" id="createManifestCheckbox" checked>
+              Generate SHA-256 Checksum Manifest (.sha256) for automatic verification upon rejoining
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action & Progress Card -->
+      <div class="card">
+        <div class="actions-footer" id="splitActionContainer">
+          <button id="startSplitBtn" class="btn btn-primary" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            Start Splitting
+          </button>
+        </div>
+
+        <!-- Progress Dashboard -->
+        <div id="splitDashboard" class="operation-dashboard">
+          <div class="progress-header">
+            <span id="splitProgressStatus">Processing...</span>
+            <span id="splitProgressPercent">0%</span>
+          </div>
+          <div class="progress-bar-container">
+            <div id="splitProgressBar" class="progress-bar-fill"></div>
+          </div>
+          <div class="metrics-strip">
+            <div class="metric-item">Speed: <strong id="splitSpeed">0 MB/s</strong></div>
+            <div class="metric-item">Time Remaining: <strong id="splitEta">--:--</strong></div>
+            <div class="metric-item">Part: <strong id="splitCurrentPart">--</strong></div>
+          </div>
+          <div class="actions-footer">
+            <button id="pauseSplitBtn" class="btn btn-warning">Pause</button>
+            <button id="cancelSplitBtn" class="btn btn-danger">Cancel</button>
+          </div>
+        </div>
+
+        <div id="splitAlert" class="alert-box"></div>
+        <div id="splitLogBox" class="log-box" style="margin-top: 12px; display: none;"></div>
+      </div>
+    </section>
+
+    <!-- ==================== JOIN TAB ==================== -->
+    <section id="joinTab" class="tab-content">
+      <!-- File Selector Card -->
+      <div class="card">
+        <div class="card-title">
+          <span>1. Select First Split Part (.001 or .part1)</span>
+        </div>
+        <div id="joinDropzone" class="dropzone">
+          <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <div class="dropzone-text">Drop the first part (.001, .part1, or .sha256) here</div>
+          <div class="dropzone-hint">PartX will automatically scan the folder and queue all remaining parts</div>
+        </div>
+
+        <div id="joinFileBadge" class="file-badge">
+          <div class="file-info">
+            <div id="joinFileName" class="file-name">filename.001</div>
+            <div id="joinFileMeta" class="file-meta">Detected 0 parts</div>
+          </div>
+          <button id="clearJoinFileBtn" class="btn-icon" title="Clear selection">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Detected parts table -->
+        <div id="detectedPartsContainer" style="display: none; margin-top: 14px;">
+          <label style="font-weight: 600;">Detected Split Sequence:</label>
+          <div class="parts-table-container">
+            <table class="parts-table">
+              <thead>
+                <tr>
+                  <th style="width: 70px;">Part #</th>
+                  <th>Filename</th>
+                  <th style="width: 120px;">Size</th>
+                </tr>
+              </thead>
+              <tbody id="detectedPartsTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Join Options Card -->
+      <div class="card">
+        <div class="card-title">
+          <span>2. Recombined File Destination</span>
+        </div>
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label>Output Destination File</label>
+            <div class="input-with-button">
+              <input type="text" id="joinOutputPathInput" placeholder="Recombined file destination path...">
+              <button id="browseJoinOutputPathBtn" class="btn btn-secondary">Browse...</button>
+            </div>
+          </div>
+          <div class="form-group full-width">
+            <label>Expected SHA-256 Checksum (Optional or auto-filled from manifest)</label>
+            <input type="text" id="joinExpectedShaInput" placeholder="e.g. 5E884898DA28047151D0E56F8DC6292773603D0D6AABDD62A11EF721D1542D8">
+          </div>
+        </div>
+      </div>
+
+      <!-- Action & Progress Card -->
+      <div class="card">
+        <div class="actions-footer" id="joinActionContainer">
+          <button id="startJoinBtn" class="btn btn-primary" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            Start Joining
+          </button>
+        </div>
+
+        <!-- Progress Dashboard -->
+        <div id="joinDashboard" class="operation-dashboard">
+          <div class="progress-header">
+            <span id="joinProgressStatus">Recombining...</span>
+            <span id="joinProgressPercent">0%</span>
+          </div>
+          <div class="progress-bar-container">
+            <div id="joinProgressBar" class="progress-bar-fill"></div>
+          </div>
+          <div class="metrics-strip">
+            <div class="metric-item">Speed: <strong id="joinSpeed">0 MB/s</strong></div>
+            <div class="metric-item">Time Remaining: <strong id="joinEta">--:--</strong></div>
+            <div class="metric-item">Part: <strong id="joinCurrentPart">--</strong></div>
+          </div>
+          <div class="actions-footer">
+            <button id="pauseJoinBtn" class="btn btn-warning">Pause</button>
+            <button id="cancelJoinBtn" class="btn btn-danger">Cancel</button>
+          </div>
+        </div>
+
+        <div id="joinAlert" class="alert-box"></div>
+        <div id="joinLogBox" class="log-box" style="margin-top: 12px; display: none;"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
