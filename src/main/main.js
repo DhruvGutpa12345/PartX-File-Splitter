@@ -14,6 +14,19 @@ const {
 let mainWindow = null;
 let activeController = null;
 
+// Single instance lock to prevent duplicate conflicting instances
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 980,
@@ -45,6 +58,7 @@ function createWindow() {
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+    app.quit();
   });
 }
 
@@ -57,8 +71,15 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  app.quit();
 });
+
+app.on('will-quit', () => {
+  if (activeController) {
+    activeController.cancel();
+  }
+});
+
 
 // --- IPC HANDLERS ---
 
