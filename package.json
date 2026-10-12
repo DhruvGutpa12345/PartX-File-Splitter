@@ -38,8 +38,8 @@
     },
     "appx": {
       "applicationId": "PartXFileSplitter",
-      "identityName": "PartX.FileSplitter",
-      "publisher": "CN=PartX File Splitter",
+      "identityName": "DhruvGupta.PartX-FileSplitterJoiner",
+      "publisher": "CN=CB32F928-2859-4967-B8F7-396A9964D1FB",
       "publisherDisplayName": "Dhruv Gupta",
       "backgroundColor": "#0f172a"
     }
