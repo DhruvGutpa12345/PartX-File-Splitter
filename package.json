@@ -24,17 +24,26 @@
     "electron-builder": "^25.1.8"
   },
   "build": {
-    "appId": "com.partx.filesplitter",
+    "appId": "PartX.FileSplitter",
     "productName": "PartX",
     "directories": {
-
       "output": "dist"
     },
     "win": {
       "target": [
         "nsis",
-        "portable"
+        "msi",
+        "appx"
       ]
+    },
+    "appx": {
+      "applicationId": "PartXFileSplitter",
+      "identityName": "PartX.FileSplitter",
+      "publisher": "CN=PartX File Splitter",
+      "publisherDisplayName": "Dhruv Gupta",
+      "backgroundColor": "#0f172a"
     }
+
   }
 }
+
