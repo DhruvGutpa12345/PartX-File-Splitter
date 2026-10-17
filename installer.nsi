@@ -12,8 +12,8 @@ CRCCheck off
 
 ; Interface Configuration
 !define MUI_ABORTWARNING
-!define MUI_ICON "C:\Users\dg321\AppData\Local\electron-builder\cache\nsis\nsis-3.0.4.1\Contrib\Graphics\Icons\modern-install-blue.ico"
-!define MUI_UNICON "C:\Users\dg321\AppData\Local\electron-builder\cache\nsis\nsis-3.0.4.1\Contrib\Graphics\Icons\modern-uninstall-blue.ico"
+!define MUI_ICON "build\icon.ico"
+!define MUI_UNICON "build\icon.ico"
 
 
 ; Pages

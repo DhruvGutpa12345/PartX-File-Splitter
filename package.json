@@ -26,6 +26,13 @@
   "build": {
     "appId": "PartX.FileSplitter",
     "productName": "PartX",
+    "compression": "maximum",
+    "asar": true,
+    "files": [
+      "src/**/*",
+      "build/icon.*",
+      "package.json"
+    ],
     "directories": {
       "output": "dist"
     },
@@ -34,7 +41,8 @@
         "nsis",
         "msi",
         "appx"
-      ]
+      ],
+      "icon": "build/icon.ico"
     },
     "appx": {
       "applicationId": "PartXFileSplitter",
@@ -43,7 +51,6 @@
       "publisherDisplayName": "Dhruv Gupta",
       "backgroundColor": "#0f172a"
     }
-
   }
 }
 

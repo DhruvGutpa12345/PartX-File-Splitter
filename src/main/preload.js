@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld('api', {
   pauseOperation: () => ipcRenderer.invoke('op:pause'),
   resumeOperation: () => ipcRenderer.invoke('op:resume'),
   cancelOperation: () => ipcRenderer.invoke('op:cancel'),
+  computeChecksums: (filePath) => ipcRenderer.invoke('op:computeChecksums', filePath),
 
   // Event Listeners
   onProgress: (callback) => {
@@ -28,5 +29,10 @@ contextBridge.exposeInMainWorld('api', {
     const subscription = (event, value) => callback(value);
     ipcRenderer.on('op:log', subscription);
     return () => ipcRenderer.removeListener('op:log', subscription);
+  },
+  onChecksumProgress: (callback) => {
+    const subscription = (event, value) => callback(value);
+    ipcRenderer.on('op:checksumProgress', subscription);
+    return () => ipcRenderer.removeListener('op:checksumProgress', subscription);
   }
 });

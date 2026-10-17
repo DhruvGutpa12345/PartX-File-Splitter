@@ -5,7 +5,7 @@ const {
   splitFile,
   detectSplitParts,
   joinFiles,
-  computeSha256,
+  computeFileChecksums,
   OperationController,
   formatBytes,
   getFreeDiskSpace
@@ -27,7 +27,6 @@ if (!gotTheLock) {
   });
 }
 
-
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 980,
@@ -36,18 +35,26 @@ function createWindow() {
     minHeight: 620,
     title: 'PartX - File Splitter & Joiner',
     backgroundColor: '#0f172a',
-    show: true,
+    show: false,
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: false
+      sandbox: false,
+      spellcheck: false
     }
   });
+
+  mainWindow.removeMenu();
 
   const indexPath = path.join(__dirname, '../renderer/index.html');
   mainWindow.loadFile(indexPath).catch(err => {
     console.error('Failed to load file:', err);
+  });
+
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
   });
 
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
@@ -265,4 +272,24 @@ ipcMain.handle('op:cancel', async () => {
     return true;
   }
   return false;
+});
+
+// Calculate file checksums (SHA-256, SHA-1, MD5)
+ipcMain.handle('op:computeChecksums', async (event, filePath) => {
+  activeController = new OperationController();
+
+  const sendProgress = (data) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('op:checksumProgress', data);
+    }
+  };
+
+  try {
+    const result = await computeFileChecksums(filePath, sendProgress, activeController);
+    activeController = null;
+    return { success: true, result };
+  } catch (error) {
+    activeController = null;
+    return { success: false, error: error.message };
+  }
 });

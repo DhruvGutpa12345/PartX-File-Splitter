@@ -3,8 +3,10 @@ const themeToggleBtn = document.getElementById('themeToggleBtn');
 const themeIcon = document.getElementById('themeIcon');
 const tabSplitBtn = document.getElementById('tabSplitBtn');
 const tabJoinBtn = document.getElementById('tabJoinBtn');
+const tabChecksumBtn = document.getElementById('tabChecksumBtn');
 const splitTab = document.getElementById('splitTab');
 const joinTab = document.getElementById('joinTab');
+const checksumTab = document.getElementById('checksumTab');
 
 // DOM Elements - Split Tab
 const splitDropzone = document.getElementById('splitDropzone');
@@ -61,22 +63,42 @@ const cancelJoinBtn = document.getElementById('cancelJoinBtn');
 const joinAlert = document.getElementById('joinAlert');
 const joinLogBox = document.getElementById('joinLogBox');
 
+// DOM Elements - Checksum Tab
+const checksumDropzone = document.getElementById('checksumDropzone');
+const checksumFileBadge = document.getElementById('checksumFileBadge');
+const checksumFileName = document.getElementById('checksumFileName');
+const checksumFileMeta = document.getElementById('checksumFileMeta');
+const clearChecksumFileBtn = document.getElementById('clearChecksumFileBtn');
+const checksumProgressCard = document.getElementById('checksumProgressCard');
+const checksumProgressBar = document.getElementById('checksumProgressBar');
+const checksumProgressPercent = document.getElementById('checksumProgressPercent');
+const checksumResultsCard = document.getElementById('checksumResultsCard');
+const hashSha256Input = document.getElementById('hashSha256Input');
+const hashSha1Input = document.getElementById('hashSha1Input');
+const hashMd5Input = document.getElementById('hashMd5Input');
+const copySha256Btn = document.getElementById('copySha256Btn');
+const copySha1Btn = document.getElementById('copySha1Btn');
+const copyMd5Btn = document.getElementById('copyMd5Btn');
+const compareHashInput = document.getElementById('compareHashInput');
+const compareHashBtn = document.getElementById('compareHashBtn');
+const compareResultBadge = document.getElementById('compareResultBadge');
+
 // Operational State
 let currentTheme = 'dark';
 let activeSplitFile = null;
 let activeJoinPartsInfo = null;
+let activeChecksumFile = null;
+let computedHashes = null;
 let isOperationPaused = false;
-let currentOperationType = null; // 'split' | 'join' | null
+let currentOperationType = null; // 'split' | 'join' | 'checksum' | null
 
 // Theme Toggle
 themeToggleBtn.addEventListener('click', () => {
   currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', currentTheme);
   if (currentTheme === 'light') {
-    // Moon icon
     themeIcon.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
   } else {
-    // Sun icon
     themeIcon.innerHTML = `
       <circle cx="12" cy="12" r="5"></circle>
       <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -92,18 +114,33 @@ themeToggleBtn.addEventListener('click', () => {
 });
 
 // Tab Navigation
-tabSplitBtn.addEventListener('click', () => {
-  tabSplitBtn.classList.add('active');
-  tabJoinBtn.classList.remove('active');
-  splitTab.classList.add('active');
-  joinTab.classList.remove('active');
-});
+function switchTab(target) {
+  tabSplitBtn.classList.toggle('active', target === 'split');
+  tabJoinBtn.classList.toggle('active', target === 'join');
+  tabChecksumBtn.classList.toggle('active', target === 'checksum');
+  splitTab.classList.toggle('active', target === 'split');
+  joinTab.classList.toggle('active', target === 'join');
+  checksumTab.classList.toggle('active', target === 'checksum');
+}
 
-tabJoinBtn.addEventListener('click', () => {
-  tabJoinBtn.classList.add('active');
-  tabSplitBtn.classList.remove('active');
-  joinTab.classList.add('active');
-  splitTab.classList.remove('active');
+tabSplitBtn.addEventListener('click', () => switchTab('split'));
+tabJoinBtn.addEventListener('click', () => switchTab('join'));
+tabChecksumBtn.addEventListener('click', () => switchTab('checksum'));
+
+// Quick Preset Chips for Chunk Size
+document.querySelectorAll('.preset-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const val = chip.getAttribute('data-val');
+    const unit = chip.getAttribute('data-unit');
+    chunkSizeInput.value = val;
+    chunkSizeUnit.value = unit;
+    const sizeRadio = document.querySelector('input[name="splitMode"][value="size"]');
+    if (sizeRadio) {
+      sizeRadio.checked = true;
+      chunkSizeGroup.style.display = 'flex';
+      partsCountGroup.style.display = 'none';
+    }
+  });
 });
 
 // Format Seconds into mm:ss
@@ -500,3 +537,110 @@ function setupDropzone(zone, onFileDropped) {
     }
   });
 }
+
+// --- CHECKSUM / VERIFY TAB LOGIC ---
+
+checksumDropzone.addEventListener('click', async () => {
+  const file = await window.api.openFile();
+  if (file) handleSelectedChecksumFile(file);
+});
+
+setupDropzone(checksumDropzone, async (droppedFile) => {
+  const meta = await window.api.getFileMeta(droppedFile.path);
+  if (meta && !meta.isDirectory) {
+    handleSelectedChecksumFile(meta);
+  }
+});
+
+clearChecksumFileBtn.addEventListener('click', () => {
+  activeChecksumFile = null;
+  computedHashes = null;
+  checksumFileBadge.style.display = 'none';
+  checksumDropzone.style.display = 'flex';
+  checksumProgressCard.style.display = 'none';
+  checksumResultsCard.style.display = 'none';
+  compareHashInput.value = '';
+  compareResultBadge.style.display = 'none';
+});
+
+async function handleSelectedChecksumFile(file) {
+  activeChecksumFile = file;
+  computedHashes = null;
+  checksumFileName.textContent = file.name;
+  checksumFileMeta.textContent = `${file.formattedSize || formatBytes(file.size)} • ${file.path}`;
+  checksumDropzone.style.display = 'none';
+  checksumFileBadge.style.display = 'flex';
+  checksumResultsCard.style.display = 'none';
+  compareHashInput.value = '';
+  compareResultBadge.style.display = 'none';
+
+  checksumProgressCard.style.display = 'block';
+  checksumProgressBar.style.width = '0%';
+  checksumProgressPercent.textContent = '0%';
+  currentOperationType = 'checksum';
+
+  const res = await window.api.computeChecksums(file.path);
+  currentOperationType = null;
+  checksumProgressCard.style.display = 'none';
+
+  if (res.success) {
+    computedHashes = res.result;
+    hashSha256Input.value = computedHashes.sha256;
+    hashSha1Input.value = computedHashes.sha1;
+    hashMd5Input.value = computedHashes.md5;
+    checksumResultsCard.style.display = 'block';
+  } else {
+    alert(`Failed to calculate checksum: ${res.error}`);
+    clearChecksumFileBtn.click();
+  }
+}
+
+// Copy Buttons
+function setupCopyBtn(btn, inputEl) {
+  btn.addEventListener('click', async () => {
+    const val = inputEl.value;
+    if (!val) return;
+    try {
+      await navigator.clipboard.writeText(val);
+      const originalText = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = originalText; }, 1500);
+    } catch (_) {}
+  });
+}
+
+setupCopyBtn(copySha256Btn, hashSha256Input);
+setupCopyBtn(copySha1Btn, hashSha1Input);
+setupCopyBtn(copyMd5Btn, hashMd5Input);
+
+// Compare Hashes
+compareHashBtn.addEventListener('click', () => {
+  if (!computedHashes) return;
+  const input = compareHashInput.value.trim().toUpperCase();
+  if (!input) {
+    compareResultBadge.style.display = 'none';
+    return;
+  }
+
+  compareResultBadge.style.display = 'block';
+  if (input === computedHashes.sha256) {
+    compareResultBadge.className = 'alert-box alert-success';
+    compareResultBadge.textContent = 'MATCH: Input exactly matches computed SHA-256!';
+  } else if (input === computedHashes.sha1) {
+    compareResultBadge.className = 'alert-box alert-success';
+    compareResultBadge.textContent = 'MATCH: Input exactly matches computed SHA-1!';
+  } else if (input === computedHashes.md5) {
+    compareResultBadge.className = 'alert-box alert-success';
+    compareResultBadge.textContent = 'MATCH: Input exactly matches computed MD5!';
+  } else {
+    compareResultBadge.className = 'alert-box alert-danger';
+    compareResultBadge.textContent = 'MISMATCH: Input does NOT match any of SHA-256, SHA-1, or MD5 checksums.';
+  }
+});
+
+// Checksum real-time progress
+window.api.onChecksumProgress((data) => {
+  const percentText = `${Math.floor(data.percent)}%`;
+  checksumProgressBar.style.width = `${data.percent}%`;
+  checksumProgressPercent.textContent = percentText;
+});

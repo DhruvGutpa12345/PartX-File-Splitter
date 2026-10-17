@@ -7,7 +7,7 @@ const {
   splitFile,
   detectSplitParts,
   joinFiles,
-  computeSha256,
+  computeFileChecksums,
   OperationController
 } = require('../src/engine/engine');
 
@@ -130,6 +130,18 @@ async function runTests() {
     assert(caughtError !== null, 'Cancellation should throw EngineError');
     assert.strictEqual(caughtError.code, 'CANCELLED');
     console.log('✅ Test 6 Passed: Operation cancellation cleanly handled.');
+
+    // --- TEST 7: Multi-Algorithm Checksum Suite (SHA-256, SHA-1, MD5) ---
+    console.log('\n--- Test 7: Multi-Algorithm Checksum Suite ---');
+    const checksums = await computeFileChecksums(testFilePath);
+    const expectedSha1 = crypto.createHash('sha1').update(buffer).digest('hex').toUpperCase();
+    const expectedMd5 = crypto.createHash('md5').update(buffer).digest('hex').toUpperCase();
+
+    assert.strictEqual(checksums.sha256, originalHash);
+    assert.strictEqual(checksums.sha1, expectedSha1);
+    assert.strictEqual(checksums.md5, expectedMd5);
+    assert.strictEqual(checksums.size, testFileSize);
+    console.log('✅ Test 7 Passed: Multi-hash generator matches SHA-256, SHA-1, and MD5.');
 
     console.log('\n🎉 ALL TESTS PASSED SUCCESSFULLY! The core engine is rock-solid.\n');
   } finally {

@@ -50,6 +50,13 @@
       </svg>
       Join / Recombine Files
     </button>
+    <button id="tabChecksumBtn" class="tab-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        <polyline points="9 12 11 14 15 10"></polyline>
+      </svg>
+      Checksum &amp; Verify
+    </button>
   </nav>
 
   <!-- Main Container -->
@@ -125,6 +132,16 @@
                 <option value="GB">GB</option>
                 <option value="KB">KB</option>
               </select>
+            </div>
+            <!-- Quick Size Presets -->
+            <div class="preset-chips">
+              <span class="preset-label">Presets:</span>
+              <button type="button" class="preset-chip" data-val="10" data-unit="MB">10 MB (Email)</button>
+              <button type="button" class="preset-chip" data-val="25" data-unit="MB">25 MB (Discord)</button>
+              <button type="button" class="preset-chip" data-val="100" data-unit="MB">100 MB (GitHub)</button>
+              <button type="button" class="preset-chip" data-val="500" data-unit="MB">500 MB</button>
+              <button type="button" class="preset-chip" data-val="1" data-unit="GB">1 GB</button>
+              <button type="button" class="preset-chip" data-val="4" data-unit="GB">4 GB (FAT32)</button>
             </div>
           </div>
 
@@ -290,6 +307,93 @@
 
         <div id="joinAlert" class="alert-box"></div>
         <div id="joinLogBox" class="log-box" style="margin-top: 12px; display: none;"></div>
+      </div>
+    </section>
+
+    <!-- ==================== CHECKSUM / VERIFY TAB ==================== -->
+    <section id="checksumTab" class="tab-content">
+      <!-- File Selector Card -->
+      <div class="card">
+        <div class="card-title">
+          <span>1. Select Any File to Calculate Hashes</span>
+        </div>
+        <div id="checksumDropzone" class="dropzone">
+          <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <polyline points="9 12 11 14 15 10"></polyline>
+          </svg>
+          <div class="dropzone-text">Drop any file here, or click to calculate checksums</div>
+          <div class="dropzone-hint">Computes SHA-256, SHA-1, and MD5 simultaneously in high-speed streaming</div>
+        </div>
+
+        <div id="checksumFileBadge" class="file-badge">
+          <div class="file-info">
+            <div id="checksumFileName" class="file-name">filename.ext</div>
+            <div id="checksumFileMeta" class="file-meta">0 MB • C:\path\to\file</div>
+          </div>
+          <button id="clearChecksumFileBtn" class="btn-icon" title="Clear selection">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Checksum Progress & Dashboard -->
+      <div class="card" id="checksumProgressCard" style="display: none;">
+        <div class="card-title">
+          <span>Computing Checksums...</span>
+          <span id="checksumProgressPercent">0%</span>
+        </div>
+        <div class="progress-bar-container">
+          <div id="checksumProgressBar" class="progress-bar-fill"></div>
+        </div>
+      </div>
+
+      <!-- Results Card -->
+      <div class="card" id="checksumResultsCard" style="display: none;">
+        <div class="card-title">
+          <span>2. Cryptographic Checksum Results</span>
+        </div>
+        <div class="form-grid">
+          <!-- SHA-256 -->
+          <div class="form-group full-width">
+            <label>SHA-256 (Industry Standard)</label>
+            <div class="input-with-button">
+              <input type="text" id="hashSha256Input" readonly class="font-mono">
+              <button id="copySha256Btn" class="btn btn-secondary" title="Copy to clipboard">Copy</button>
+            </div>
+          </div>
+
+          <!-- SHA-1 -->
+          <div class="form-group full-width">
+            <label>SHA-1 (Legacy / Git compatible)</label>
+            <div class="input-with-button">
+              <input type="text" id="hashSha1Input" readonly class="font-mono">
+              <button id="copySha1Btn" class="btn btn-secondary" title="Copy to clipboard">Copy</button>
+            </div>
+          </div>
+
+          <!-- MD5 -->
+          <div class="form-group full-width">
+            <label>MD5</label>
+            <div class="input-with-button">
+              <input type="text" id="hashMd5Input" readonly class="font-mono">
+              <button id="copyMd5Btn" class="btn btn-secondary" title="Copy to clipboard">Copy</button>
+            </div>
+          </div>
+
+          <!-- Verification Comparison -->
+          <div class="form-group full-width" style="margin-top: 10px;">
+            <label>Compare Against Expected Checksum (Paste to Verify)</label>
+            <div class="input-with-button">
+              <input type="text" id="compareHashInput" placeholder="Paste expected SHA-256, SHA-1, or MD5 hash here...">
+              <button id="compareHashBtn" class="btn btn-primary">Compare</button>
+            </div>
+            <div id="compareResultBadge" style="margin-top: 8px; display: none;" class="alert-box"></div>
+          </div>
+        </div>
       </div>
     </section>
   </main>

@@ -97,11 +97,10 @@ function formatBytes(bytes, decimals = 2) {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
-
 /**
- * Computes SHA-256 hash of a file with progress updates
+ * Computes multiple checksums (SHA-256, SHA-1, MD5) for a file simultaneously in a single stream pass
  */
-async function computeSha256(filePath, onProgress, controller = null) {
+async function computeFileChecksums(filePath, onProgress = null, controller = null) {
   return new Promise((resolve, reject) => {
     let stat;
     try {
@@ -112,7 +111,9 @@ async function computeSha256(filePath, onProgress, controller = null) {
 
     const totalBytes = stat.size;
     let processedBytes = 0;
-    const hash = crypto.createHash('sha256');
+    const sha256 = crypto.createHash('sha256');
+    const sha1 = crypto.createHash('sha1');
+    const md5 = crypto.createHash('md5');
     const stream = fs.createReadStream(filePath, { highWaterMark: 4 * 1024 * 1024 });
 
     stream.on('data', async (chunk) => {
@@ -133,7 +134,9 @@ async function computeSha256(filePath, onProgress, controller = null) {
         }
       }
 
-      hash.update(chunk);
+      sha256.update(chunk);
+      sha1.update(chunk);
+      md5.update(chunk);
       processedBytes += chunk.length;
       if (onProgress && totalBytes > 0) {
         onProgress({
@@ -149,10 +152,17 @@ async function computeSha256(filePath, onProgress, controller = null) {
     });
 
     stream.on('end', () => {
-      resolve(hash.digest('hex').toUpperCase());
+      resolve({
+        sha256: sha256.digest('hex').toUpperCase(),
+        sha1: sha1.digest('hex').toUpperCase(),
+        md5: md5.digest('hex').toUpperCase(),
+        size: totalBytes,
+        formattedSize: formatBytes(totalBytes)
+      });
     });
   });
 }
+
 
 /**
  * Core Split Engine
@@ -744,7 +754,7 @@ module.exports = {
   OperationController,
   getFreeDiskSpace,
   formatBytes,
-  computeSha256,
+  computeFileChecksums,
   splitFile,
   detectSplitParts,
   joinFiles
