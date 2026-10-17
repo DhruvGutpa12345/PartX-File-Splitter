@@ -239,26 +239,28 @@ body {
    ============================================================ */
 .tab-navigation {
   display: flex;
-  padding: 6px 20px 10px;
-  gap: 8px;
+  padding: 6px 16px 8px;
+  gap: 6px;
   background: var(--bg-secondary);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
 }
 
 .tab-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: transparent;
   border: 1px solid transparent;
-  padding: 7px 16px;
-  font-size: 13px;
+  padding: 6px 13px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text-secondary);
   border-radius: var(--radius-sm);
   cursor: pointer;
+  white-space: nowrap;
   transition: all 0.18s ease;
 }
 
@@ -1163,3 +1165,125 @@ input[type="text"]:focus, input[type="number"]:focus, select:focus {
 .toast-info {
   border-left: 4px solid var(--accent-primary);
 }
+
+.toast-danger {
+  border-left: 4px solid var(--error);
+}
+
+.toast-warning {
+  border-left: 4px solid var(--warning);
+}
+
+.history-type-compare {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+}
+
+.history-type-manifest {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+/* ============================================================
+   FILE COMPARATOR & MANIFEST VERIFIER STYLES
+   ============================================================ */
+.compare-dropzone-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.compare-file-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.col-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.diff-hero-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: var(--radius-sm);
+  margin-top: 4px;
+}
+
+.diff-hero-banner.diff-identical {
+  background: var(--success-bg);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+}
+
+.diff-hero-banner.diff-mismatch {
+  background: var(--error-bg);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+}
+
+.diff-hero-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diff-hero-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.diff-hero-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.diff-hero-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.diff-hero-desc {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+/* Status Pills for Manifest & Diff */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.status-pill-ok {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-pill-fail {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-pill-missing {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+

@@ -3,7 +3,7 @@
 !include "FileFunc.nsh"
 
 Name "PartX File Splitter & Joiner"
-OutFile "dist\PartX-Setup-Signed-1.0.0.exe"
+OutFile "dist\PartX-Setup-Signed-1.1.0.exe"
 InstallDir "$LOCALAPPDATA\Programs\PartX"
 RequestExecutionLevel user
 SetCompressor /SOLID lzma
@@ -46,8 +46,8 @@ Section "Install"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\PartX" "DisplayName" "PartX File Splitter & Joiner"
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\PartX" "UninstallString" '"$INSTDIR\Uninstall.exe"'
   WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\PartX" "DisplayIcon" '"$INSTDIR\PartX.exe"'
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\PartX" "DisplayVersion" "1.0.0"
-  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\PartX" "Publisher" "PartX Community"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\PartX" "DisplayVersion" "1.1.0"
+  WriteRegStr HKCU "Software\Microsoft\Windows\CurrentVersion\Uninstall\PartX" "Publisher" "Dhruv Gupta"
 SectionEnd
 
 

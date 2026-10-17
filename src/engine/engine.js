@@ -163,6 +163,243 @@ async function computeFileChecksums(filePath, onProgress = null, controller = nu
   });
 }
 
+/**
+ * Compares two files directly by streaming and calculating hashes
+ */
+async function compareTwoFiles(file1Path, file2Path, onProgress = null, controller = null) {
+  if (!fs.existsSync(file1Path)) throw new EngineError(`First file not found: "${file1Path}"`, 'FILE_NOT_FOUND');
+  if (!fs.existsSync(file2Path)) throw new EngineError(`Second file not found: "${file2Path}"`, 'FILE_NOT_FOUND');
+
+  const stat1 = fs.statSync(file1Path);
+  const stat2 = fs.statSync(file2Path);
+
+  if (stat1.size !== stat2.size) {
+    const hash1 = await computeFileChecksums(file1Path, null, controller);
+    const hash2 = await computeFileChecksums(file2Path, null, controller);
+    return {
+      identical: false,
+      reason: 'Different file sizes',
+      size1: stat1.size,
+      size2: stat2.size,
+      formattedSize1: formatBytes(stat1.size),
+      formattedSize2: formatBytes(stat2.size),
+      file1Name: path.basename(file1Path),
+      file2Name: path.basename(file2Path),
+      sha256_1: hash1.sha256,
+      sha256_2: hash2.sha256,
+      md5_1: hash1.md5,
+      md5_2: hash2.md5
+    };
+  }
+
+  const totalBytes = stat1.size;
+  if (totalBytes === 0) {
+    return {
+      identical: true,
+      reason: 'Both files are empty (0 bytes)',
+      size: 0,
+      formattedSize: '0 Bytes',
+      file1Name: path.basename(file1Path),
+      file2Name: path.basename(file2Path),
+      sha256_1: 'E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855',
+      sha256_2: 'E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855',
+      md5_1: 'D41D8CD98F00B204E9800998ECF8427E',
+      md5_2: 'D41D8CD98F00B204E9800998ECF8427E'
+    };
+  }
+
+  const BUFFER_SIZE = 4 * 1024 * 1024;
+  const buf1 = Buffer.alloc(BUFFER_SIZE);
+  const buf2 = Buffer.alloc(BUFFER_SIZE);
+  let fd1 = fs.openSync(file1Path, 'r');
+  let fd2 = fs.openSync(file2Path, 'r');
+
+  const sha256_1 = crypto.createHash('sha256');
+  const sha256_2 = crypto.createHash('sha256');
+  const md5_1 = crypto.createHash('md5');
+  const md5_2 = crypto.createHash('md5');
+
+  let processedBytes = 0;
+  let identical = true;
+  let diffOffset = null;
+
+  try {
+    let bytesRead1 = 0;
+    while ((bytesRead1 = fs.readSync(fd1, buf1, 0, BUFFER_SIZE, processedBytes)) > 0) {
+      if (controller) await controller.checkWait();
+
+      const bytesRead2 = fs.readSync(fd2, buf2, 0, bytesRead1, processedBytes);
+      const chunk1 = buf1.subarray(0, bytesRead1);
+      const chunk2 = buf2.subarray(0, bytesRead2);
+
+      sha256_1.update(chunk1);
+      sha256_2.update(chunk2);
+      md5_1.update(chunk1);
+      md5_2.update(chunk2);
+
+      if (identical && !chunk1.equals(chunk2)) {
+        identical = false;
+        for (let i = 0; i < bytesRead1; i++) {
+          if (chunk1[i] !== chunk2[i]) {
+            diffOffset = processedBytes + i;
+            break;
+          }
+        }
+      }
+
+      processedBytes += bytesRead1;
+      if (onProgress) {
+        onProgress({
+          processedBytes,
+          totalBytes,
+          percent: Math.min(100, (processedBytes / totalBytes) * 100)
+        });
+      }
+    }
+  } finally {
+    fs.closeSync(fd1);
+    fs.closeSync(fd2);
+  }
+
+  const finalSha1 = sha256_1.digest('hex').toUpperCase();
+  const finalSha2 = sha256_2.digest('hex').toUpperCase();
+  const finalMd5_1 = md5_1.digest('hex').toUpperCase();
+  const finalMd5_2 = md5_2.digest('hex').toUpperCase();
+
+  return {
+    identical,
+    diffOffset,
+    size: totalBytes,
+    formattedSize: formatBytes(totalBytes),
+    file1Name: path.basename(file1Path),
+    file2Name: path.basename(file2Path),
+    sha256_1: finalSha1,
+    sha256_2: finalSha2,
+    md5_1: finalMd5_1,
+    md5_2: finalMd5_2
+  };
+}
+
+/**
+ * Verifies all file entries in a .sha256, .md5, or .sfv manifest
+ */
+async function verifyManifestFile(manifestPath, onProgress = null, onLog = () => {}, controller = null) {
+  if (!fs.existsSync(manifestPath)) {
+    throw new EngineError(`Manifest file not found: "${manifestPath}"`, 'FILE_NOT_FOUND');
+  }
+
+  const dir = path.dirname(manifestPath);
+  const content = fs.readFileSync(manifestPath, 'utf8');
+  const lines = content.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0 && !l.startsWith('#') && !l.startsWith(';'));
+
+  const parsedEntries = [];
+  const isSfv = manifestPath.toLowerCase().endsWith('.sfv');
+
+  for (const line of lines) {
+    if (isSfv) {
+      const parts = line.split(/\s+/);
+      if (parts.length >= 2) {
+        const crc = parts[parts.length - 1];
+        const fname = parts.slice(0, parts.length - 1).join(' ');
+        parsedEntries.push({ fileName: fname, expectedHash: crc.toUpperCase(), hashType: 'CRC32' });
+      }
+    } else {
+      const match = line.match(/^([a-fA-F0-9]{32,64})\s+[*]?([^\r\n(]+?)(?:\s+\(.*\))?$/);
+      if (match) {
+        const hash = match[1].toUpperCase();
+        const fname = match[2].trim();
+        const hashType = hash.length === 64 ? 'SHA-256' : (hash.length === 40 ? 'SHA-1' : 'MD5');
+        parsedEntries.push({ fileName: fname, expectedHash: hash, hashType });
+      }
+    }
+  }
+
+  if (parsedEntries.length === 0) {
+    throw new EngineError('No valid checksum entries found in manifest.', 'INVALID_MANIFEST');
+  }
+
+  onLog(`Found ${parsedEntries.length} file entries in manifest.`);
+  const results = [];
+  let passedCount = 0;
+  let failedCount = 0;
+  let missingCount = 0;
+
+  for (let i = 0; i < parsedEntries.length; i++) {
+    if (controller) await controller.checkWait();
+
+    const entry = parsedEntries[i];
+    const targetFilePath = path.join(dir, entry.fileName);
+
+    if (!fs.existsSync(targetFilePath)) {
+      missingCount++;
+      results.push({
+        fileName: entry.fileName,
+        status: 'MISSING',
+        expectedHash: entry.expectedHash,
+        actualHash: null,
+        hashType: entry.hashType
+      });
+      onLog(`[MISSING] ${entry.fileName}`);
+      continue;
+    }
+
+    try {
+      const hashes = await computeFileChecksums(targetFilePath, null, controller);
+      let actualHash = hashes.sha256;
+      if (entry.hashType === 'SHA-1') actualHash = hashes.sha1;
+      if (entry.hashType === 'MD5') actualHash = hashes.md5;
+
+      const isMatch = actualHash === entry.expectedHash;
+      if (isMatch) {
+        passedCount++;
+        onLog(`[PASSED] ${entry.fileName}`);
+      } else {
+        failedCount++;
+        onLog(`[FAILED] ${entry.fileName} (Mismatch)`);
+      }
+
+      results.push({
+        fileName: entry.fileName,
+        status: isMatch ? 'PASSED' : 'FAILED',
+        expectedHash: entry.expectedHash,
+        actualHash,
+        hashType: entry.hashType,
+        size: hashes.size,
+        formattedSize: hashes.formattedSize
+      });
+    } catch (err) {
+      failedCount++;
+      results.push({
+        fileName: entry.fileName,
+        status: 'ERROR',
+        error: err.message,
+        expectedHash: entry.expectedHash,
+        actualHash: null,
+        hashType: entry.hashType
+      });
+    }
+
+    if (onProgress) {
+      onProgress({
+        currentIndex: i + 1,
+        totalFiles: parsedEntries.length,
+        percent: Math.min(100, ((i + 1) / parsedEntries.length) * 100)
+      });
+    }
+  }
+
+  return {
+    manifestFile: path.basename(manifestPath),
+    totalFiles: parsedEntries.length,
+    passedCount,
+    failedCount,
+    missingCount,
+    allPassed: passedCount === parsedEntries.length,
+    results
+  };
+}
+
+
 
 /**
  * Core Split Engine
@@ -388,10 +625,10 @@ async function splitFile(options) {
         `# Part Naming Scheme: ${namingPattern}`,
         ``,
         `# Part Details:`,
-        ...partHashes.map(p => `${p.sha256} *${p.fileName} (${formatBytes(p.size)})`),
+        ...partHashes.map(p => `${p.sha256} *${p.fileName}`),
         ``,
-        `# Standard Checksum Entry for Original File:`,
-        `${originalSha256} *${fileName}`
+        `# Original File Verification:`,
+        `# ${originalSha256} *${fileName}`
       ];
       fs.writeFileSync(manifestPath, manifestLines.join('\r\n'), 'utf8');
       onLog(`Generated SHA-256 manifest: ${path.basename(manifestPath)}`);
@@ -755,6 +992,8 @@ module.exports = {
   getFreeDiskSpace,
   formatBytes,
   computeFileChecksums,
+  compareTwoFiles,
+  verifyManifestFile,
   splitFile,
   detectSplitParts,
   joinFiles

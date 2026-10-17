@@ -9,6 +9,8 @@ build/
 *.msi
 *.zip
 *.tar.gz
+*.cer
+*.pfx
 
 # Logs and system dumps
 logs/

@@ -16,9 +16,14 @@ const toastContainer = document.getElementById('toastContainer');
 const tabSplitBtn = document.getElementById('tabSplitBtn');
 const tabJoinBtn = document.getElementById('tabJoinBtn');
 const tabChecksumBtn = document.getElementById('tabChecksumBtn');
+const tabCompareBtn = document.getElementById('tabCompareBtn');
+const tabManifestBtn = document.getElementById('tabManifestBtn');
+
 const splitTab = document.getElementById('splitTab');
 const joinTab = document.getElementById('joinTab');
 const checksumTab = document.getElementById('checksumTab');
+const compareTab = document.getElementById('compareTab');
+const manifestTab = document.getElementById('manifestTab');
 
 // --- DOM ELEMENTS: SPLIT TAB ---
 const splitDropzone = document.getElementById('splitDropzone');
@@ -108,14 +113,69 @@ const compareHashInput = document.getElementById('compareHashInput');
 const compareHashBtn = document.getElementById('compareHashBtn');
 const compareResultBadge = document.getElementById('compareResultBadge');
 
+// --- DOM ELEMENTS: COMPARE TAB ---
+const compareDropzoneA = document.getElementById('compareDropzoneA');
+const compareFileBadgeA = document.getElementById('compareFileBadgeA');
+const compareFileNameA = document.getElementById('compareFileNameA');
+const compareFileMetaA = document.getElementById('compareFileMetaA');
+const clearCompareFileBtnA = document.getElementById('clearCompareFileBtnA');
+
+const compareDropzoneB = document.getElementById('compareDropzoneB');
+const compareFileBadgeB = document.getElementById('compareFileBadgeB');
+const compareFileNameB = document.getElementById('compareFileNameB');
+const compareFileMetaB = document.getElementById('compareFileMetaB');
+const clearCompareFileBtnB = document.getElementById('clearCompareFileBtnB');
+
+const startCompareBtn = document.getElementById('startCompareBtn');
+const cancelCompareBtn = document.getElementById('cancelCompareBtn');
+const compareActionContainer = document.getElementById('compareActionContainer');
+const compareDashboard = document.getElementById('compareDashboard');
+const compareProgressBar = document.getElementById('compareProgressBar');
+const compareProgressPercent = document.getElementById('compareProgressPercent');
+const compareProgressStatus = document.getElementById('compareProgressStatus');
+const compareProcessed = document.getElementById('compareProcessed');
+const compareMetricsStatus = document.getElementById('compareMetricsStatus');
+const compareAlert = document.getElementById('compareAlert');
+const compareResultsCard = document.getElementById('compareResultsCard');
+const compareHeroBanner = document.getElementById('compareHeroBanner');
+const compareResultsTbody = document.getElementById('compareResultsTbody');
+const copyCompareReportBtn = document.getElementById('copyCompareReportBtn');
+
+// --- DOM ELEMENTS: MANIFEST TAB ---
+const manifestDropzone = document.getElementById('manifestDropzone');
+const manifestFileBadge = document.getElementById('manifestFileBadge');
+const manifestFileName = document.getElementById('manifestFileName');
+const manifestFileMeta = document.getElementById('manifestFileMeta');
+const clearManifestFileBtn = document.getElementById('clearManifestFileBtn');
+
+const startVerifyManifestBtn = document.getElementById('startVerifyManifestBtn');
+const cancelManifestBtn = document.getElementById('cancelManifestBtn');
+const manifestActionContainer = document.getElementById('manifestActionContainer');
+const manifestDashboard = document.getElementById('manifestDashboard');
+const manifestProgressBar = document.getElementById('manifestProgressBar');
+const manifestProgressPercent = document.getElementById('manifestProgressPercent');
+const manifestProgressStatus = document.getElementById('manifestProgressStatus');
+const manifestCurrentIndex = document.getElementById('manifestCurrentIndex');
+const manifestCurrentFilename = document.getElementById('manifestCurrentFilename');
+const manifestAlert = document.getElementById('manifestAlert');
+const manifestResultsCard = document.getElementById('manifestResultsCard');
+const manifestResultsSummaryText = document.getElementById('manifestResultsSummaryText');
+const manifestResultsTbody = document.getElementById('manifestResultsTbody');
+const copyManifestReportBtn = document.getElementById('copyManifestReportBtn');
+
 // --- OPERATIONAL STATE ---
 let currentThemePreference = localStorage.getItem('partx_theme_pref') || 'system';
 let activeSplitFile = null;
 let activeJoinPartsInfo = null;
 let activeChecksumFile = null;
 let computedHashes = null;
+let activeCompareFileA = null;
+let activeCompareFileB = null;
+let latestCompareResult = null;
+let activeManifestFile = null;
+let latestManifestResult = null;
 let isOperationPaused = false;
-let currentOperationType = null; // 'split' | 'join' | 'checksum' | null
+let currentOperationType = null; // 'split' | 'join' | 'checksum' | 'compare' | 'manifest' | null
 
 // ============================================================
 // 1. THEME MANAGEMENT (SYSTEM, DARK, LIGHT)
@@ -319,14 +379,21 @@ function switchTab(target) {
   tabSplitBtn.classList.toggle('active', target === 'split');
   tabJoinBtn.classList.toggle('active', target === 'join');
   tabChecksumBtn.classList.toggle('active', target === 'checksum');
+  tabCompareBtn.classList.toggle('active', target === 'compare');
+  tabManifestBtn.classList.toggle('active', target === 'manifest');
+
   splitTab.classList.toggle('active', target === 'split');
   joinTab.classList.toggle('active', target === 'join');
   checksumTab.classList.toggle('active', target === 'checksum');
+  compareTab.classList.toggle('active', target === 'compare');
+  manifestTab.classList.toggle('active', target === 'manifest');
 }
 
 tabSplitBtn.addEventListener('click', () => switchTab('split'));
 tabJoinBtn.addEventListener('click', () => switchTab('join'));
 tabChecksumBtn.addEventListener('click', () => switchTab('checksum'));
+tabCompareBtn.addEventListener('click', () => switchTab('compare'));
+tabManifestBtn.addEventListener('click', () => switchTab('manifest'));
 
 // Format utilities
 function formatTime(seconds) {
@@ -1006,3 +1073,397 @@ window.api.onChecksumProgress((data) => {
   checksumProgressBar.style.width = `${data.percent}%`;
   checksumProgressPercent.textContent = percentText;
 });
+
+// ============================================================
+// 9. FILE COMPARATOR (BIT-BY-BIT DIFF)
+// ============================================================
+
+function updateCompareButtonState() {
+  startCompareBtn.disabled = !(activeCompareFileA && activeCompareFileB);
+}
+
+// File A Selection
+compareDropzoneA.addEventListener('click', async () => {
+  const file = await window.api.openFile();
+  if (file) handleSelectedCompareFileA(file);
+});
+
+setupDropzone(compareDropzoneA, async (droppedFile) => {
+  const meta = await window.api.getFileMeta(droppedFile.path);
+  if (meta && !meta.isDirectory) {
+    handleSelectedCompareFileA(meta);
+  } else {
+    showAlert(compareAlert, 'Please drop a valid file for File A.', 'danger');
+  }
+});
+
+function handleSelectedCompareFileA(file) {
+  hideAlert(compareAlert);
+  activeCompareFileA = file;
+  compareFileNameA.textContent = file.name;
+  compareFileMetaA.textContent = `${file.formattedSize || formatBytes(file.size)} • ${file.path}`;
+  compareDropzoneA.style.display = 'none';
+  compareFileBadgeA.style.display = 'flex';
+  compareResultsCard.style.display = 'none';
+  updateCompareButtonState();
+}
+
+clearCompareFileBtnA.addEventListener('click', () => {
+  activeCompareFileA = null;
+  compareFileBadgeA.style.display = 'none';
+  compareDropzoneA.style.display = 'flex';
+  compareResultsCard.style.display = 'none';
+  updateCompareButtonState();
+});
+
+// File B Selection
+compareDropzoneB.addEventListener('click', async () => {
+  const file = await window.api.openFile();
+  if (file) handleSelectedCompareFileB(file);
+});
+
+setupDropzone(compareDropzoneB, async (droppedFile) => {
+  const meta = await window.api.getFileMeta(droppedFile.path);
+  if (meta && !meta.isDirectory) {
+    handleSelectedCompareFileB(meta);
+  } else {
+    showAlert(compareAlert, 'Please drop a valid file for File B.', 'danger');
+  }
+});
+
+function handleSelectedCompareFileB(file) {
+  hideAlert(compareAlert);
+  activeCompareFileB = file;
+  compareFileNameB.textContent = file.name;
+  compareFileMetaB.textContent = `${file.formattedSize || formatBytes(file.size)} • ${file.path}`;
+  compareDropzoneB.style.display = 'none';
+  compareFileBadgeB.style.display = 'flex';
+  compareResultsCard.style.display = 'none';
+  updateCompareButtonState();
+}
+
+clearCompareFileBtnB.addEventListener('click', () => {
+  activeCompareFileB = null;
+  compareFileBadgeB.style.display = 'none';
+  compareDropzoneB.style.display = 'flex';
+  compareResultsCard.style.display = 'none';
+  updateCompareButtonState();
+});
+
+// Start Comparison Execution
+startCompareBtn.addEventListener('click', async () => {
+  if (!activeCompareFileA || !activeCompareFileB) return;
+
+  hideAlert(compareAlert);
+  compareActionContainer.style.display = 'none';
+  compareDashboard.style.display = 'flex';
+  compareProgressBar.style.width = '0%';
+  compareProgressPercent.textContent = '0%';
+  compareProgressStatus.textContent = 'Comparing binary streams bit-by-bit...';
+  compareProcessed.textContent = '0 MB / ' + formatBytes(Math.max(activeCompareFileA.size, activeCompareFileB.size));
+  compareMetricsStatus.textContent = 'Analyzing...';
+  compareResultsCard.style.display = 'none';
+  currentOperationType = 'compare';
+
+  const res = await window.api.compareFiles(activeCompareFileA.path, activeCompareFileB.path);
+
+  currentOperationType = null;
+  compareDashboard.style.display = 'none';
+  compareActionContainer.style.display = 'flex';
+
+  if (!res.success) {
+    showAlert(compareAlert, `Comparison failed: ${res.error}`, 'danger');
+    showToast('Comparison failed: ' + res.error, 'danger');
+    return;
+  }
+
+  const result = res.result;
+  latestCompareResult = result;
+  compareResultsCard.style.display = 'block';
+
+  // Render Hero Banner
+  if (result.identical) {
+    compareHeroBanner.className = 'diff-hero-banner diff-identical';
+    compareHeroBanner.innerHTML = `
+      <div class="diff-hero-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+      <div class="diff-hero-content">
+        <div class="diff-hero-title">100% IDENTICAL FILES</div>
+        <div class="diff-hero-desc">Both files have matching lengths and identical binary byte content. SHA-256 and MD5 hashes match.</div>
+      </div>
+    `;
+    showToast('Files are 100% identical!', 'success');
+  } else if (result.sizeDifference) {
+    compareHeroBanner.className = 'diff-hero-banner diff-mismatch';
+    compareHeroBanner.innerHTML = `
+      <div class="diff-hero-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <div class="diff-hero-content">
+        <div class="diff-hero-title">FILE SIZE MISMATCH</div>
+        <div class="diff-hero-desc">File A is ${formatBytes(result.file1.size)} (${result.file1.size} bytes), but File B is ${formatBytes(result.file2.size)} (${result.file2.size} bytes).</div>
+      </div>
+    `;
+    showToast('File size mismatch detected!', 'danger');
+  } else {
+    compareHeroBanner.className = 'diff-hero-banner diff-mismatch';
+    compareHeroBanner.innerHTML = `
+      <div class="diff-hero-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="15" y1="9" x2="9" y2="15"></line>
+          <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+      </div>
+      <div class="diff-hero-content">
+        <div class="diff-hero-title">BINARY CONTENT DIFFERENCE DETECTED</div>
+        <div class="diff-hero-desc">Files share identical length (${formatBytes(result.file1.size)}) but differ at byte offset #${result.diffOffset.toLocaleString()} (approx ${formatBytes(result.diffOffset)}).</div>
+      </div>
+    `;
+    showToast('Binary content difference found!', 'danger');
+  }
+
+  // Populate comparison table
+  compareResultsTbody.innerHTML = `
+    <tr>
+      <td><strong>Filename</strong></td>
+      <td>${result.file1.name}</td>
+      <td>${result.file2.name}</td>
+    </tr>
+    <tr>
+      <td><strong>Exact File Size</strong></td>
+      <td>${result.file1.size.toLocaleString()} bytes (${formatBytes(result.file1.size)})</td>
+      <td>${result.file2.size.toLocaleString()} bytes (${formatBytes(result.file2.size)})</td>
+    </tr>
+    <tr>
+      <td><strong>SHA-256 Checksum</strong></td>
+      <td class="font-mono">${result.file1.sha256}</td>
+      <td class="font-mono">${result.file2.sha256}</td>
+    </tr>
+    <tr>
+      <td><strong>MD5 Checksum</strong></td>
+      <td class="font-mono">${result.file1.md5}</td>
+      <td class="font-mono">${result.file2.md5}</td>
+    </tr>
+    <tr>
+      <td><strong>Comparison Verdict</strong></td>
+      <td colspan="2">
+        <span class="status-pill ${result.identical ? 'status-pill-ok' : 'status-pill-fail'}">
+          ${result.identical ? 'MATCH' : 'MISMATCH'}
+        </span>
+        ${result.identical ? 'Bit-for-bit identical' : (result.diffOffset !== null ? `First difference at byte offset #${result.diffOffset.toLocaleString()}` : 'Different file sizes')}
+      </td>
+    </tr>
+  `;
+
+  // Add to history
+  addHistoryItem({
+    type: 'compare',
+    fileName: `${result.file1.name} vs ${result.file2.name}`,
+    details: result.identical ? '100% Identical' : (result.diffOffset !== null ? `Diff at offset #${result.diffOffset}` : 'Size mismatch'),
+    targetPath: activeCompareFileA.path,
+    hash: result.file1.sha256
+  });
+});
+
+cancelCompareBtn.addEventListener('click', async () => {
+  await window.api.cancelOperation();
+  compareProgressStatus.textContent = 'Cancelling comparison...';
+});
+
+window.api.onCompareProgress((data) => {
+  if (currentOperationType === 'compare') {
+    const percent = Math.floor(data.percent);
+    compareProgressBar.style.width = `${percent}%`;
+    compareProgressPercent.textContent = `${percent}%`;
+    compareProcessed.textContent = `${formatBytes(data.bytesProcessed)} / ${formatBytes(data.totalBytes)}`;
+    compareMetricsStatus.textContent = data.speedBytesPerSec > 0 ? `${(data.speedBytesPerSec / (1024 * 1024)).toFixed(1)} MB/s` : 'Comparing...';
+  }
+});
+
+copyCompareReportBtn.addEventListener('click', async () => {
+  if (!latestCompareResult) return;
+  const r = latestCompareResult;
+  const report = [
+    '================ PARTX COMPARISON REPORT ================',
+    `Timestamp: ${new Date().toLocaleString()}`,
+    `Verdict:   ${r.identical ? 'IDENTICAL (100% MATCH)' : 'DIFFERENT'}`,
+    r.identical ? '' : (r.diffOffset !== null ? `Difference: Byte offset #${r.diffOffset.toLocaleString()}` : 'Difference: File lengths differ'),
+    '',
+    `FILE A: ${r.file1.name}`,
+    `  Path:   ${r.file1.path}`,
+    `  Size:   ${r.file1.size.toLocaleString()} bytes (${formatBytes(r.file1.size)})`,
+    `  SHA256: ${r.file1.sha256}`,
+    `  MD5:    ${r.file1.md5}`,
+    '',
+    `FILE B: ${r.file2.name}`,
+    `  Path:   ${r.file2.path}`,
+    `  Size:   ${r.file2.size.toLocaleString()} bytes (${formatBytes(r.file2.size)})`,
+    `  SHA256: ${r.file2.sha256}`,
+    `  MD5:    ${r.file2.md5}`,
+    '========================================================='
+  ].filter(line => line !== '').join('\r\n');
+
+  await navigator.clipboard.writeText(report);
+  showToast('Comparison report copied to clipboard', 'success');
+});
+
+// ============================================================
+// 10. MANIFEST VERIFIER (.sha256 / .sfv / .md5)
+// ============================================================
+
+manifestDropzone.addEventListener('click', async () => {
+  const file = await window.api.openFile([
+    { name: 'Checksum Manifests', extensions: ['sha256', 'sfv', 'md5', 'txt'] },
+    { name: 'All Files', extensions: ['*'] }
+  ]);
+  if (file) handleSelectedManifestFile(file);
+});
+
+setupDropzone(manifestDropzone, async (droppedFile) => {
+  const meta = await window.api.getFileMeta(droppedFile.path);
+  if (meta && !meta.isDirectory) {
+    handleSelectedManifestFile(meta);
+  } else {
+    showAlert(manifestAlert, 'Please drop a checksum manifest file (.sha256, .sfv, or .md5).', 'danger');
+  }
+});
+
+function handleSelectedManifestFile(file) {
+  hideAlert(manifestAlert);
+  activeManifestFile = file;
+  manifestFileName.textContent = file.name;
+  manifestFileMeta.textContent = `${file.formattedSize || formatBytes(file.size)} • ${file.path}`;
+  manifestDropzone.style.display = 'none';
+  manifestFileBadge.style.display = 'flex';
+  manifestResultsCard.style.display = 'none';
+  startVerifyManifestBtn.disabled = false;
+}
+
+clearManifestFileBtn.addEventListener('click', () => {
+  activeManifestFile = null;
+  manifestFileBadge.style.display = 'none';
+  manifestDropzone.style.display = 'flex';
+  manifestResultsCard.style.display = 'none';
+  startVerifyManifestBtn.disabled = true;
+  hideAlert(manifestAlert);
+});
+
+startVerifyManifestBtn.addEventListener('click', async () => {
+  if (!activeManifestFile) return;
+
+  hideAlert(manifestAlert);
+  manifestActionContainer.style.display = 'none';
+  manifestDashboard.style.display = 'flex';
+  manifestProgressBar.style.width = '0%';
+  manifestProgressPercent.textContent = '0%';
+  manifestProgressStatus.textContent = 'Verifying manifest entries...';
+  manifestCurrentIndex.textContent = '0 / --';
+  manifestCurrentFilename.textContent = 'Scanning...';
+  manifestResultsCard.style.display = 'none';
+  currentOperationType = 'manifest';
+
+  const res = await window.api.verifyManifest(activeManifestFile.path);
+
+  currentOperationType = null;
+  manifestDashboard.style.display = 'none';
+  manifestActionContainer.style.display = 'flex';
+
+  if (!res.success) {
+    showAlert(manifestAlert, `Manifest verification failed: ${res.error}`, 'danger');
+    showToast('Verification failed: ' + res.error, 'danger');
+    return;
+  }
+
+  const result = res.result;
+  latestManifestResult = result;
+  manifestResultsCard.style.display = 'block';
+
+  // Summary Text & Alert
+  manifestResultsSummaryText.textContent = `${result.passed} of ${result.total} files passed (${result.failed} failed, ${result.missing} missing) • Format: ${result.manifestType}`;
+
+  if (result.failed === 0 && result.missing === 0) {
+    showAlert(manifestAlert, `All ${result.total} files successfully verified against manifest! 100% integrity confirmed.`, 'success');
+    showToast(`All ${result.total} files verified successfully!`, 'success');
+  } else {
+    showAlert(manifestAlert, `Verification finished with warnings: ${result.passed} passed, ${result.failed} checksum mismatches, ${result.missing} missing files.`, 'danger');
+    showToast(`Verification completed: ${result.failed + result.missing} issue(s) detected`, 'danger');
+  }
+
+  // Populate Table
+  manifestResultsTbody.innerHTML = '';
+  result.results.forEach(entry => {
+    const tr = document.createElement('tr');
+    let pillClass = 'status-pill-ok';
+    let pillText = 'OK';
+    if (entry.status === 'missing') {
+      pillClass = 'status-pill-missing';
+      pillText = 'MISSING';
+    } else if (entry.status === 'fail') {
+      pillClass = 'status-pill-fail';
+      pillText = 'FAIL';
+    }
+
+    tr.innerHTML = `
+      <td><span class="status-pill ${pillClass}">${pillText}</span></td>
+      <td><strong>${entry.fileName}</strong></td>
+      <td>${entry.size !== null ? formatBytes(entry.size) : '--'}</td>
+      <td class="font-mono">${entry.expectedHash || '--'}</td>
+      <td class="font-mono">${entry.actualHash || '--'}</td>
+    `;
+    manifestResultsTbody.appendChild(tr);
+  });
+
+  // Add to history
+  addHistoryItem({
+    type: 'manifest',
+    fileName: activeManifestFile.name,
+    details: `${result.passed}/${result.total} verified (${result.manifestType})`,
+    targetPath: activeManifestFile.path
+  });
+});
+
+cancelManifestBtn.addEventListener('click', async () => {
+  await window.api.cancelOperation();
+  manifestProgressStatus.textContent = 'Cancelling verification...';
+});
+
+window.api.onManifestProgress((data) => {
+  if (currentOperationType === 'manifest') {
+    const percent = Math.floor(data.percent);
+    manifestProgressBar.style.width = `${percent}%`;
+    manifestProgressPercent.textContent = `${percent}%`;
+    manifestCurrentIndex.textContent = `${data.currentIndex} / ${data.totalFiles}`;
+    manifestCurrentFilename.textContent = data.currentFile || '--';
+  }
+});
+
+copyManifestReportBtn.addEventListener('click', async () => {
+  if (!latestManifestResult) return;
+  const r = latestManifestResult;
+  const lines = [
+    '================ PARTX MANIFEST VERIFICATION REPORT ================',
+    `Manifest: ${activeManifestFile.name}`,
+    `Format:   ${r.manifestType}`,
+    `Summary:  ${r.passed}/${r.total} Passed (${r.failed} Failed, ${r.missing} Missing)`,
+    `Time:     ${new Date().toLocaleString()}`,
+    '---------------------------------------------------------------------'
+  ];
+
+  r.results.forEach(entry => {
+    lines.push(`[${entry.status.toUpperCase()}] ${entry.fileName} - Expected: ${entry.expectedHash} | Actual: ${entry.actualHash || 'N/A'}`);
+  });
+  lines.push('=====================================================================');
+
+  await navigator.clipboard.writeText(lines.join('\r\n'));
+  showToast('Manifest verification report copied', 'success');
+});
+

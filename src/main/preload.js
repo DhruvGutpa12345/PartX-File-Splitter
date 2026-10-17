@@ -18,6 +18,8 @@ contextBridge.exposeInMainWorld('api', {
   resumeOperation: () => ipcRenderer.invoke('op:resume'),
   cancelOperation: () => ipcRenderer.invoke('op:cancel'),
   computeChecksums: (filePath) => ipcRenderer.invoke('op:computeChecksums', filePath),
+  compareFiles: (file1Path, file2Path) => ipcRenderer.invoke('op:compareFiles', { file1Path, file2Path }),
+  verifyManifest: (manifestPath) => ipcRenderer.invoke('op:verifyManifest', { manifestPath }),
 
   // Theme & Notifications
   getSystemTheme: () => ipcRenderer.invoke('theme:getSystemTheme'),
@@ -46,5 +48,15 @@ contextBridge.exposeInMainWorld('api', {
     const subscription = (event, value) => callback(value);
     ipcRenderer.on('op:checksumProgress', subscription);
     return () => ipcRenderer.removeListener('op:checksumProgress', subscription);
+  },
+  onCompareProgress: (callback) => {
+    const subscription = (event, value) => callback(value);
+    ipcRenderer.on('op:compareProgress', subscription);
+    return () => ipcRenderer.removeListener('op:compareProgress', subscription);
+  },
+  onManifestProgress: (callback) => {
+    const subscription = (event, value) => callback(value);
+    ipcRenderer.on('op:manifestProgress', subscription);
+    return () => ipcRenderer.removeListener('op:manifestProgress', subscription);
   }
 });

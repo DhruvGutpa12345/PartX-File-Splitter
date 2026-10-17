@@ -8,6 +8,8 @@ const {
   detectSplitParts,
   joinFiles,
   computeFileChecksums,
+  compareTwoFiles,
+  verifyManifestFile,
   OperationController
 } = require('../src/engine/engine');
 
@@ -142,6 +144,36 @@ async function runTests() {
     assert.strictEqual(checksums.md5, expectedMd5);
     assert.strictEqual(checksums.size, testFileSize);
     console.log('✅ Test 7 Passed: Multi-hash generator matches SHA-256, SHA-1, and MD5.');
+
+    // --- TEST 8: File Comparator (Bit-by-bit comparison) ---
+    console.log('\n--- Test 8: File Comparator ---');
+    const duplicateFilePath = path.join(tempDir, 'sample_dataset_copy.bin');
+    fs.copyFileSync(testFilePath, duplicateFilePath);
+
+    const matchCompare = await compareTwoFiles(testFilePath, duplicateFilePath);
+    assert.strictEqual(matchCompare.identical, true);
+    assert.strictEqual(matchCompare.sha256_1, originalHash);
+    assert.strictEqual(matchCompare.sha256_2, originalHash);
+
+    // Modify 1 byte in copy to test difference detection
+    const modBuf = Buffer.from([0x00]);
+    const fd = fs.openSync(duplicateFilePath, 'r+');
+    fs.writeSync(fd, modBuf, 0, 1, 100);
+    fs.closeSync(fd);
+
+    const diffCompare = await compareTwoFiles(testFilePath, duplicateFilePath);
+    assert.strictEqual(diffCompare.identical, false);
+    assert.strictEqual(diffCompare.diffOffset, 100);
+    console.log('✅ Test 8 Passed: File comparison correctly identified identical copy and 1-byte diff.');
+
+    // --- TEST 9: Manifest File Verifier (.sha256 format) ---
+    console.log('\n--- Test 9: Manifest Verifier ---');
+    const manifestPath = splitResult.manifestPath;
+    const manifestCheck = await verifyManifestFile(manifestPath);
+    assert.strictEqual(manifestCheck.allPassed, true);
+    assert.strictEqual(manifestCheck.passedCount, 4);
+    assert.strictEqual(manifestCheck.failedCount, 0);
+    console.log('✅ Test 9 Passed: Manifest file verification validated all 4 split parts.');
 
     console.log('\n🎉 ALL TESTS PASSED SUCCESSFULLY! The core engine is rock-solid.\n');
   } finally {

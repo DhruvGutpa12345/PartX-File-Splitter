@@ -20,7 +20,7 @@
       </div>
       <div class="brand-text">
         <span class="brand-name">PartX</span>
-        <span class="brand-tag">v1.0</span>
+        <span class="brand-tag">v1.1</span>
       </div>
     </div>
 
@@ -71,25 +71,44 @@
   <!-- Mode Selector Tabs -->
   <nav class="tab-navigation">
     <button id="tabSplitBtn" class="tab-btn active">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <line x1="16" y1="3" x2="16" y2="21"></line>
         <line x1="8" y1="3" x2="8" y2="21"></line>
         <rect x="2" y="3" width="20" height="18" rx="2"></rect>
       </svg>
-      Split File
+      Split
     </button>
     <button id="tabJoinBtn" class="tab-btn">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
       </svg>
-      Join / Recombine
+      Join
     </button>
     <button id="tabChecksumBtn" class="tab-btn">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
         <polyline points="9 12 11 14 15 10"></polyline>
       </svg>
-      Checksum &amp; Verify
+      Checksums
+    </button>
+    <button id="tabCompareBtn" class="tab-btn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M16 3h5v5"></path>
+        <path d="M8 21H3v-5"></path>
+        <path d="M21 3l-7.5 7.5"></path>
+        <path d="M3 21l7.5-7.5"></path>
+      </svg>
+      Compare Files
+    </button>
+    <button id="tabManifestBtn" class="tab-btn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <polyline points="10 9 9 9 8 9"></polyline>
+      </svg>
+      Verify Manifest
     </button>
   </nav>
 
@@ -556,6 +575,294 @@
             </div>
             <div id="compareResultBadge" style="margin-top: 8px; display: none;" class="alert-box"></div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== COMPARE TAB ==================== -->
+    <section id="compareTab" class="tab-content">
+      <!-- File Selectors Card (2 Columns) -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-step-badge">1</div>
+          <div class="card-title-text">
+            <h3>Select Files to Compare</h3>
+            <p>Select two files for high-speed streaming bit-by-bit binary comparison</p>
+          </div>
+        </div>
+
+        <div class="compare-dropzone-grid">
+          <!-- File A Dropzone / Badge -->
+          <div class="compare-file-col">
+            <div class="col-title">File A (Base File)</div>
+            <div id="compareDropzoneA" class="dropzone">
+              <div class="dropzone-icon-container">
+                <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="12" y1="18" x2="12" y2="12"></line>
+                  <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
+              </div>
+              <div class="dropzone-text">Drop File A here</div>
+              <div class="dropzone-hint">First file to compare against</div>
+              <button type="button" class="btn btn-secondary btn-sm dropzone-browse-btn">Browse File A...</button>
+            </div>
+            <div id="compareFileBadgeA" class="file-badge">
+              <div class="file-icon-box">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+              </div>
+              <div class="file-info">
+                <div id="compareFileNameA" class="file-name">file_a.ext</div>
+                <div id="compareFileMetaA" class="file-meta">0 MB • C:\path\to\file_a</div>
+              </div>
+              <button id="clearCompareFileBtnA" class="btn-icon" title="Clear selection">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- File B Dropzone / Badge -->
+          <div class="compare-file-col">
+            <div class="col-title">File B (Comparison Target)</div>
+            <div id="compareDropzoneB" class="dropzone">
+              <div class="dropzone-icon-container">
+                <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="12" y1="18" x2="12" y2="12"></line>
+                  <line x1="9" y1="15" x2="15" y2="15"></line>
+                </svg>
+              </div>
+              <div class="dropzone-text">Drop File B here</div>
+              <div class="dropzone-hint">Second file to compare with</div>
+              <button type="button" class="btn btn-secondary btn-sm dropzone-browse-btn">Browse File B...</button>
+            </div>
+            <div id="compareFileBadgeB" class="file-badge">
+              <div class="file-icon-box">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+              </div>
+              <div class="file-info">
+                <div id="compareFileNameB" class="file-name">file_b.ext</div>
+                <div id="compareFileMetaB" class="file-meta">0 MB • C:\path\to\file_b</div>
+              </div>
+              <button id="clearCompareFileBtnB" class="btn-icon" title="Clear selection">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action & Progress Card -->
+      <div class="card">
+        <div class="actions-footer" id="compareActionContainer">
+          <button id="startCompareBtn" class="btn btn-primary btn-lg" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 3h5v5"></path>
+              <path d="M8 21H3v-5"></path>
+              <path d="M21 3l-7.5 7.5"></path>
+              <path d="M3 21l7.5-7.5"></path>
+            </svg>
+            Compare Files
+          </button>
+        </div>
+
+        <!-- Progress Dashboard -->
+        <div id="compareDashboard" class="operation-dashboard">
+          <div class="progress-header">
+            <span id="compareProgressStatus" class="progress-status-text">Comparing binary streams...</span>
+            <span id="compareProgressPercent" class="progress-percent-text">0%</span>
+          </div>
+          <div class="progress-bar-container">
+            <div id="compareProgressBar" class="progress-bar-fill"></div>
+          </div>
+          <div class="metrics-strip">
+            <div class="metric-item">
+              <span class="metric-label">Processed</span>
+              <strong id="compareProcessed">0 MB / 0 MB</strong>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Current Status</span>
+              <strong id="compareMetricsStatus">Comparing streams...</strong>
+            </div>
+          </div>
+          <div class="actions-footer">
+            <button id="cancelCompareBtn" class="btn btn-danger">Cancel</button>
+          </div>
+        </div>
+
+        <div id="compareAlert" class="alert-box"></div>
+      </div>
+
+      <!-- Comparison Detailed Results Card -->
+      <div class="card" id="compareResultsCard" style="display: none;">
+        <div class="card-header">
+          <div class="card-step-badge">2</div>
+          <div class="card-title-text">
+            <h3>Comparison Analysis</h3>
+            <p>Bit-by-bit comparison metrics and cryptographic checksum audit</p>
+          </div>
+        </div>
+
+        <div id="compareHeroBanner" class="diff-hero-banner"></div>
+
+        <div class="parts-table-container" style="margin-top: 14px; max-height: 240px;">
+          <table class="parts-table">
+            <thead>
+              <tr>
+                <th style="width: 140px;">Property</th>
+                <th>File A</th>
+                <th>File B</th>
+              </tr>
+            </thead>
+            <tbody id="compareResultsTbody"></tbody>
+          </table>
+        </div>
+
+        <div class="actions-footer" style="margin-top: 12px;">
+          <button id="copyCompareReportBtn" class="btn btn-secondary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copy Comparison Summary
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== MANIFEST VERIFIER TAB ==================== -->
+    <section id="manifestTab" class="tab-content">
+      <!-- Manifest Selector Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-step-badge">1</div>
+          <div class="card-title-text">
+            <h3>Select Manifest File</h3>
+            <p>Verify directory integrity using .sha256, .sfv, or .md5 checksum files</p>
+          </div>
+        </div>
+
+        <div id="manifestDropzone" class="dropzone">
+          <div class="dropzone-icon-container">
+            <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+          </div>
+          <div class="dropzone-text">Drop .sha256, .sfv, or .md5 manifest here</div>
+          <div class="dropzone-hint">PartX will locate and verify all referenced files in the same directory</div>
+          <button type="button" class="btn btn-secondary btn-sm dropzone-browse-btn">Browse Manifest...</button>
+        </div>
+
+        <div id="manifestFileBadge" class="file-badge">
+          <div class="file-icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+          </div>
+          <div class="file-info">
+            <div id="manifestFileName" class="file-name">manifest.sha256</div>
+            <div id="manifestFileMeta" class="file-meta">0 KB • C:\path\to\manifest</div>
+          </div>
+          <button id="clearManifestFileBtn" class="btn-icon" title="Clear selection">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Action & Progress Card -->
+      <div class="card">
+        <div class="actions-footer" id="manifestActionContainer">
+          <button id="startVerifyManifestBtn" class="btn btn-primary btn-lg" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            Verify Manifest Files
+          </button>
+        </div>
+
+        <!-- Progress Dashboard -->
+        <div id="manifestDashboard" class="operation-dashboard">
+          <div class="progress-header">
+            <span id="manifestProgressStatus" class="progress-status-text">Verifying files...</span>
+            <span id="manifestProgressPercent" class="progress-percent-text">0%</span>
+          </div>
+          <div class="progress-bar-container">
+            <div id="manifestProgressBar" class="progress-bar-fill"></div>
+          </div>
+          <div class="metrics-strip">
+            <div class="metric-item">
+              <span class="metric-label">File Index</span>
+              <strong id="manifestCurrentIndex">0 / 0</strong>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Current File</span>
+              <strong id="manifestCurrentFilename">--</strong>
+            </div>
+          </div>
+          <div class="actions-footer">
+            <button id="cancelManifestBtn" class="btn btn-danger">Cancel</button>
+          </div>
+        </div>
+
+        <div id="manifestAlert" class="alert-box"></div>
+      </div>
+
+      <!-- Manifest Verification Table Card -->
+      <div class="card" id="manifestResultsCard" style="display: none;">
+        <div class="card-header">
+          <div class="card-step-badge">2</div>
+          <div class="card-title-text">
+            <h3>Manifest Verification Results</h3>
+            <p id="manifestResultsSummaryText">Verification summary</p>
+          </div>
+        </div>
+
+        <div class="parts-table-container" style="max-height: 240px;">
+          <table class="parts-table">
+            <thead>
+              <tr>
+                <th style="width: 100px;">Status</th>
+                <th>File Name</th>
+                <th style="width: 100px;">Size</th>
+                <th>Expected Checksum</th>
+                <th>Actual Checksum</th>
+              </tr>
+            </thead>
+            <tbody id="manifestResultsTbody"></tbody>
+          </table>
+        </div>
+
+        <div class="actions-footer" style="margin-top: 12px;">
+          <button id="copyManifestReportBtn" class="btn btn-secondary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copy Verification Log
+          </button>
         </div>
       </div>
     </section>

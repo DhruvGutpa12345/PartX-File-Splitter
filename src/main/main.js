@@ -13,6 +13,8 @@ const {
   detectSplitParts,
   joinFiles,
   computeFileChecksums,
+  compareTwoFiles,
+  verifyManifestFile,
   OperationController,
   formatBytes,
   getFreeDiskSpace
@@ -301,6 +303,47 @@ ipcMain.handle('op:computeChecksums', async (event, filePath) => {
 
   try {
     const result = await computeFileChecksums(filePath, sendProgress, activeController);
+    activeController = null;
+    return { success: true, result };
+  } catch (error) {
+    activeController = null;
+    return { success: false, error: error.message };
+  }
+});
+
+// Compare two files bit-by-bit
+ipcMain.handle('op:compareFiles', async (event, { file1Path, file2Path }) => {
+  activeController = new OperationController();
+  const sendProgress = (data) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('op:compareProgress', data);
+    }
+  };
+  try {
+    const result = await compareTwoFiles(file1Path, file2Path, sendProgress, activeController);
+    activeController = null;
+    return { success: true, result };
+  } catch (error) {
+    activeController = null;
+    return { success: false, error: error.message };
+  }
+});
+
+// Verify checksum manifest file (.sha256, .sfv, .md5)
+ipcMain.handle('op:verifyManifest', async (event, { manifestPath }) => {
+  activeController = new OperationController();
+  const sendProgress = (data) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('op:manifestProgress', data);
+    }
+  };
+  const sendLog = (message) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('op:log', { message, timestamp: new Date().toLocaleTimeString() });
+    }
+  };
+  try {
+    const result = await verifyManifestFile(manifestPath, sendProgress, sendLog, activeController);
     activeController = null;
     return { success: true, result };
   } catch (error) {
