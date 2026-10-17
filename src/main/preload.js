@@ -19,7 +19,19 @@ contextBridge.exposeInMainWorld('api', {
   cancelOperation: () => ipcRenderer.invoke('op:cancel'),
   computeChecksums: (filePath) => ipcRenderer.invoke('op:computeChecksums', filePath),
 
+  // Theme & Notifications
+  getSystemTheme: () => ipcRenderer.invoke('theme:getSystemTheme'),
+  setThemeSource: (source) => ipcRenderer.invoke('theme:setSource', source),
+  showNotification: (opts) => ipcRenderer.invoke('notification:show', opts),
+  deleteFiles: (files) => ipcRenderer.invoke('file:deleteFiles', files),
+  writeText: (data) => ipcRenderer.invoke('file:writeText', data),
+
   // Event Listeners
+  onSystemThemeChanged: (callback) => {
+    const subscription = (event, value) => callback(value);
+    ipcRenderer.on('theme:systemChanged', subscription);
+    return () => ipcRenderer.removeListener('theme:systemChanged', subscription);
+  },
   onProgress: (callback) => {
     const subscription = (event, value) => callback(value);
     ipcRenderer.on('op:progress', subscription);

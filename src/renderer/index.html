@@ -7,31 +7,65 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Window Drag Titlebar -->
+  <!-- Window Titlebar & Header -->
   <header class="titlebar">
     <div class="titlebar-brand">
-      <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-        <polyline points="14 2 14 8 20 8"></polyline>
-        <line x1="8" y1="13" x2="16" y2="13"></line>
-        <line x1="12" y1="9" x2="12" y2="17"></line>
-      </svg>
-      <span>PartX File Splitter &amp; Joiner</span>
+      <div class="brand-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="4"></rect>
+          <line x1="12" y1="3" x2="12" y2="21"></line>
+          <path d="M7 8l-2 4 2 4"></path>
+          <path d="M17 8l2 4-2 4"></path>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">PartX</span>
+        <span class="brand-tag">v1.0</span>
+      </div>
     </div>
-    <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Theme (Dark / Light)">
-      <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <!-- Sun icon default for dark mode -->
-        <circle cx="12" cy="12" r="5"></circle>
-        <line x1="12" y1="1" x2="12" y2="3"></line>
-        <line x1="12" y1="21" x2="12" y2="23"></line>
-        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-        <line x1="1" y1="12" x2="3" y2="12"></line>
-        <line x1="21" y1="12" x2="23" y2="12"></line>
-        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-      </svg>
-    </button>
+
+    <!-- Header Actions -->
+    <div class="header-actions">
+      <!-- History Drawer Toggle -->
+      <button id="historyBtn" class="header-action-btn" title="View Recent Operation History">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span>History</span>
+        <span id="historyBadge" class="count-badge" style="display: none;">0</span>
+      </button>
+
+      <!-- 3-Way Theme Selector (System, Dark, Light) -->
+      <div class="theme-segmented" role="group" aria-label="Theme Selector">
+        <button type="button" class="theme-opt" data-theme-val="system" title="Match Windows System Theme">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+          <span>Auto</span>
+        </button>
+        <button type="button" class="theme-opt active" data-theme-val="dark" title="Dark Theme">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <span>Dark</span>
+        </button>
+        <button type="button" class="theme-opt" data-theme-val="light" title="Light Theme">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+          </svg>
+          <span>Light</span>
+        </button>
+      </div>
+    </div>
   </header>
 
   <!-- Mode Selector Tabs -->
@@ -48,7 +82,7 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
       </svg>
-      Join / Recombine Files
+      Join / Recombine
     </button>
     <button id="tabChecksumBtn" class="tab-btn">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -65,25 +99,39 @@
     <section id="splitTab" class="tab-content active">
       <!-- File Selector Card -->
       <div class="card">
-        <div class="card-title">
-          <span>1. Select Source File</span>
+        <div class="card-header">
+          <div class="card-step-badge">1</div>
+          <div class="card-title-text">
+            <h3>Select Source File</h3>
+            <p>Pick or drop any file to split into sequential parts</p>
+          </div>
         </div>
+
         <div id="splitDropzone" class="dropzone">
-          <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
-          <div class="dropzone-text">Drag &amp; drop any file here, or click to browse</div>
-          <div class="dropzone-hint">Supports any file format (ISO, ZIP, Video, Datasets, Archives, Virtual Disks)</div>
+          <div class="dropzone-icon-container">
+            <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+          </div>
+          <div class="dropzone-text">Drag &amp; drop any large file here</div>
+          <div class="dropzone-hint">ISO images, ZIP archives, 4K videos, database backups, virtual disks</div>
+          <button type="button" class="btn btn-secondary btn-sm dropzone-browse-btn">Browse File...</button>
         </div>
 
         <div id="splitFileBadge" class="file-badge">
+          <div class="file-icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+              <polyline points="13 2 13 9 20 9"></polyline>
+            </svg>
+          </div>
           <div class="file-info">
             <div id="splitFileName" class="file-name">filename.ext</div>
             <div id="splitFileMeta" class="file-meta">0 MB • C:\path\to\file</div>
           </div>
-          <button id="clearSplitFileBtn" class="btn-icon" title="Clear selection">
+          <button id="clearSplitFileBtn" class="btn-icon" title="Remove file selection">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -94,21 +142,26 @@
 
       <!-- Split Options Card -->
       <div class="card">
-        <div class="card-title">
-          <span>2. Splitting Configuration</span>
+        <div class="card-header">
+          <div class="card-step-badge">2</div>
+          <div class="card-title-text">
+            <h3>Splitting Configuration</h3>
+            <p>Customize split sizes, naming patterns, and output preferences</p>
+          </div>
         </div>
+
         <div class="form-grid">
           <!-- Split Method -->
           <div class="form-group">
             <label>Split Method</label>
-            <div class="radio-group">
-              <label class="radio-label">
+            <div class="radio-pill-group">
+              <label class="radio-pill">
                 <input type="radio" name="splitMode" value="size" checked>
-                By Chunk Size
+                <span>By Chunk Size</span>
               </label>
-              <label class="radio-label">
+              <label class="radio-pill">
                 <input type="radio" name="splitMode" value="count">
-                By Number of Parts
+                <span>By Number of Parts</span>
               </label>
             </div>
           </div>
@@ -151,20 +204,37 @@
             <input type="number" id="partsCountInput" value="2" min="2" max="9999" step="1">
           </div>
 
+          <!-- Dynamic Chunk Preview & Estimator Strip -->
+          <div id="splitEstimatorBox" class="estimator-box" style="display: none;">
+            <div class="estimator-header">
+              <span class="estimator-title">Estimated Output Preview:</span>
+              <span id="estimatorSummaryText" class="estimator-badge">--</span>
+            </div>
+            <div id="splitVisualStrip" class="visual-strip"></div>
+          </div>
+
           <!-- Target Output Directory -->
           <div class="form-group full-width">
-            <label>Output Directory</label>
+            <label>Output Destination Folder</label>
             <div class="input-with-button">
               <input type="text" id="splitOutputDirInput" placeholder="Select destination folder...">
               <button id="browseSplitOutputDirBtn" class="btn btn-secondary">Browse...</button>
             </div>
           </div>
 
-          <!-- Manifest Option -->
-          <div class="form-group full-width">
+          <!-- Advanced Options Checkboxes -->
+          <div class="form-group full-width options-group">
             <label class="checkbox-label">
               <input type="checkbox" id="createManifestCheckbox" checked>
-              Generate SHA-256 Checksum Manifest (.sha256) for automatic verification upon rejoining
+              <span>Generate SHA-256 Checksum Manifest (.sha256) for automatic verification</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="splitAutoOpenFolder" checked>
+              <span>Open destination folder when finished</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="splitNotifyOnFinish" checked>
+              <span>Send Windows notification when complete</span>
             </label>
           </div>
         </div>
@@ -173,8 +243,8 @@
       <!-- Action & Progress Card -->
       <div class="card">
         <div class="actions-footer" id="splitActionContainer">
-          <button id="startSplitBtn" class="btn btn-primary" disabled>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <button id="startSplitBtn" class="btn btn-primary btn-lg" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polygon points="5 3 19 12 5 21 5 3"></polygon>
             </svg>
             Start Splitting
@@ -184,16 +254,25 @@
         <!-- Progress Dashboard -->
         <div id="splitDashboard" class="operation-dashboard">
           <div class="progress-header">
-            <span id="splitProgressStatus">Processing...</span>
-            <span id="splitProgressPercent">0%</span>
+            <span id="splitProgressStatus" class="progress-status-text">Processing...</span>
+            <span id="splitProgressPercent" class="progress-percent-text">0%</span>
           </div>
           <div class="progress-bar-container">
             <div id="splitProgressBar" class="progress-bar-fill"></div>
           </div>
           <div class="metrics-strip">
-            <div class="metric-item">Speed: <strong id="splitSpeed">0 MB/s</strong></div>
-            <div class="metric-item">Time Remaining: <strong id="splitEta">--:--</strong></div>
-            <div class="metric-item">Part: <strong id="splitCurrentPart">--</strong></div>
+            <div class="metric-item">
+              <span class="metric-label">Transfer Speed</span>
+              <strong id="splitSpeed">0 MB/s</strong>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Time Remaining</span>
+              <strong id="splitEta">--:--</strong>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Current Part</span>
+              <strong id="splitCurrentPart">--</strong>
+            </div>
           </div>
           <div class="actions-footer">
             <button id="pauseSplitBtn" class="btn btn-warning">Pause</button>
@@ -210,20 +289,34 @@
     <section id="joinTab" class="tab-content">
       <!-- File Selector Card -->
       <div class="card">
-        <div class="card-title">
-          <span>1. Select First Split Part (.001 or .part1)</span>
+        <div class="card-header">
+          <div class="card-step-badge">1</div>
+          <div class="card-title-text">
+            <h3>Select Split Part</h3>
+            <p>Pick the first part (.001 or .part1) or manifest file (.sha256)</p>
+          </div>
         </div>
+
         <div id="joinDropzone" class="dropzone">
-          <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
+          <div class="dropzone-icon-container">
+            <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+          </div>
           <div class="dropzone-text">Drop the first part (.001, .part1, or .sha256) here</div>
-          <div class="dropzone-hint">PartX will automatically scan the folder and queue all remaining parts</div>
+          <div class="dropzone-hint">PartX will automatically scan the folder and queue all remaining sequential parts</div>
+          <button type="button" class="btn btn-secondary btn-sm dropzone-browse-btn">Browse Part...</button>
         </div>
 
         <div id="joinFileBadge" class="file-badge">
+          <div class="file-icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+              <polyline points="13 2 13 9 20 9"></polyline>
+            </svg>
+          </div>
           <div class="file-info">
             <div id="joinFileName" class="file-name">filename.001</div>
             <div id="joinFileMeta" class="file-meta">Detected 0 parts</div>
@@ -238,7 +331,10 @@
 
         <!-- Detected parts table -->
         <div id="detectedPartsContainer" style="display: none; margin-top: 14px;">
-          <label style="font-weight: 600;">Detected Split Sequence:</label>
+          <div class="table-header-strip">
+            <span class="table-title">Detected Split Sequence:</span>
+            <span id="detectedPartsSummary" class="estimator-badge">0 parts</span>
+          </div>
           <div class="parts-table-container">
             <table class="parts-table">
               <thead>
@@ -256,9 +352,14 @@
 
       <!-- Join Options Card -->
       <div class="card">
-        <div class="card-title">
-          <span>2. Recombined File Destination</span>
+        <div class="card-header">
+          <div class="card-step-badge">2</div>
+          <div class="card-title-text">
+            <h3>Destination &amp; Verification</h3>
+            <p>Set target recombined file and verify data integrity</p>
+          </div>
         </div>
+
         <div class="form-grid">
           <div class="form-group full-width">
             <label>Output Destination File</label>
@@ -268,8 +369,23 @@
             </div>
           </div>
           <div class="form-group full-width">
-            <label>Expected SHA-256 Checksum (Optional or auto-filled from manifest)</label>
-            <input type="text" id="joinExpectedShaInput" placeholder="e.g. 5E884898DA28047151D0E56F8DC6292773603D0D6AABDD62A11EF721D1542D8">
+            <label>Expected SHA-256 Checksum (Auto-filled from manifest if present)</label>
+            <input type="text" id="joinExpectedShaInput" placeholder="e.g. 5E884898DA28047151D0E56F8DC6292773603D0D6AABDD62A11EF721D1542D8" class="font-mono">
+          </div>
+          <!-- Join Advanced Options -->
+          <div class="form-group full-width options-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="joinAutoOpenFolder" checked>
+              <span>Open destination folder when finished</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="joinNotifyOnFinish" checked>
+              <span>Send Windows notification when complete</span>
+            </label>
+            <label class="checkbox-label danger-checkbox">
+              <input type="checkbox" id="joinDeletePartsCheckbox">
+              <span>Delete source parts after successful join &amp; verification (frees disk space)</span>
+            </label>
           </div>
         </div>
       </div>
@@ -277,8 +393,8 @@
       <!-- Action & Progress Card -->
       <div class="card">
         <div class="actions-footer" id="joinActionContainer">
-          <button id="startJoinBtn" class="btn btn-primary" disabled>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <button id="startJoinBtn" class="btn btn-primary btn-lg" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polygon points="5 3 19 12 5 21 5 3"></polygon>
             </svg>
             Start Joining
@@ -288,16 +404,25 @@
         <!-- Progress Dashboard -->
         <div id="joinDashboard" class="operation-dashboard">
           <div class="progress-header">
-            <span id="joinProgressStatus">Recombining...</span>
-            <span id="joinProgressPercent">0%</span>
+            <span id="joinProgressStatus" class="progress-status-text">Recombining...</span>
+            <span id="joinProgressPercent" class="progress-percent-text">0%</span>
           </div>
           <div class="progress-bar-container">
             <div id="joinProgressBar" class="progress-bar-fill"></div>
           </div>
           <div class="metrics-strip">
-            <div class="metric-item">Speed: <strong id="joinSpeed">0 MB/s</strong></div>
-            <div class="metric-item">Time Remaining: <strong id="joinEta">--:--</strong></div>
-            <div class="metric-item">Part: <strong id="joinCurrentPart">--</strong></div>
+            <div class="metric-item">
+              <span class="metric-label">Transfer Speed</span>
+              <strong id="joinSpeed">0 MB/s</strong>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Time Remaining</span>
+              <strong id="joinEta">--:--</strong>
+            </div>
+            <div class="metric-item">
+              <span class="metric-label">Current Part</span>
+              <strong id="joinCurrentPart">--</strong>
+            </div>
           </div>
           <div class="actions-footer">
             <button id="pauseJoinBtn" class="btn btn-warning">Pause</button>
@@ -314,19 +439,33 @@
     <section id="checksumTab" class="tab-content">
       <!-- File Selector Card -->
       <div class="card">
-        <div class="card-title">
-          <span>1. Select Any File to Calculate Hashes</span>
+        <div class="card-header">
+          <div class="card-step-badge">1</div>
+          <div class="card-title-text">
+            <h3>Calculate File Hashes</h3>
+            <p>Compute SHA-256, SHA-1, and MD5 simultaneously via high-speed streaming</p>
+          </div>
         </div>
+
         <div id="checksumDropzone" class="dropzone">
-          <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke-width="2">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            <polyline points="9 12 11 14 15 10"></polyline>
-          </svg>
-          <div class="dropzone-text">Drop any file here, or click to calculate checksums</div>
-          <div class="dropzone-hint">Computes SHA-256, SHA-1, and MD5 simultaneously in high-speed streaming</div>
+          <div class="dropzone-icon-container">
+            <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              <polyline points="9 12 11 14 15 10"></polyline>
+            </svg>
+          </div>
+          <div class="dropzone-text">Drop any file here to calculate checksums</div>
+          <div class="dropzone-hint">Instant cryptographic hashing with zero file size limits</div>
+          <button type="button" class="btn btn-secondary btn-sm dropzone-browse-btn">Browse File...</button>
         </div>
 
         <div id="checksumFileBadge" class="file-badge">
+          <div class="file-icon-box">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              <polyline points="9 12 11 14 15 10"></polyline>
+            </svg>
+          </div>
           <div class="file-info">
             <div id="checksumFileName" class="file-name">filename.ext</div>
             <div id="checksumFileMeta" class="file-meta">0 MB • C:\path\to\file</div>
@@ -342,9 +481,9 @@
 
       <!-- Checksum Progress & Dashboard -->
       <div class="card" id="checksumProgressCard" style="display: none;">
-        <div class="card-title">
-          <span>Computing Checksums...</span>
-          <span id="checksumProgressPercent">0%</span>
+        <div class="progress-header">
+          <span class="progress-status-text">Computing cryptographic hashes...</span>
+          <span id="checksumProgressPercent" class="progress-percent-text">0%</span>
         </div>
         <div class="progress-bar-container">
           <div id="checksumProgressBar" class="progress-bar-fill"></div>
@@ -353,13 +492,18 @@
 
       <!-- Results Card -->
       <div class="card" id="checksumResultsCard" style="display: none;">
-        <div class="card-title">
-          <span>2. Cryptographic Checksum Results</span>
+        <div class="card-header">
+          <div class="card-step-badge">2</div>
+          <div class="card-title-text">
+            <h3>Checksum Results</h3>
+            <p>Export manifests, copy hashes, or compare against an expected string</p>
+          </div>
         </div>
+
         <div class="form-grid">
           <!-- SHA-256 -->
           <div class="form-group full-width">
-            <label>SHA-256 (Industry Standard)</label>
+            <label>SHA-256 (Secure Hash Algorithm 256-bit)</label>
             <div class="input-with-button">
               <input type="text" id="hashSha256Input" readonly class="font-mono">
               <button id="copySha256Btn" class="btn btn-secondary" title="Copy to clipboard">Copy</button>
@@ -377,18 +521,37 @@
 
           <!-- MD5 -->
           <div class="form-group full-width">
-            <label>MD5</label>
+            <label>MD5 Checksum</label>
             <div class="input-with-button">
               <input type="text" id="hashMd5Input" readonly class="font-mono">
               <button id="copyMd5Btn" class="btn btn-secondary" title="Copy to clipboard">Copy</button>
             </div>
           </div>
 
+          <!-- Export & Copy Action Bar -->
+          <div class="form-group full-width checksum-action-bar">
+            <button id="copyAllHashesBtn" class="btn btn-secondary">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              Copy All Hashes
+            </button>
+            <button id="exportChecksumBtn" class="btn btn-secondary">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Export .sha256 File
+            </button>
+          </div>
+
           <!-- Verification Comparison -->
-          <div class="form-group full-width" style="margin-top: 10px;">
+          <div class="form-group full-width compare-box">
             <label>Compare Against Expected Checksum (Paste to Verify)</label>
             <div class="input-with-button">
-              <input type="text" id="compareHashInput" placeholder="Paste expected SHA-256, SHA-1, or MD5 hash here...">
+              <input type="text" id="compareHashInput" placeholder="Paste expected SHA-256, SHA-1, or MD5 hash to verify...">
               <button id="compareHashBtn" class="btn btn-primary">Compare</button>
             </div>
             <div id="compareResultBadge" style="margin-top: 8px; display: none;" class="alert-box"></div>
@@ -397,6 +560,33 @@
       </div>
     </section>
   </main>
+
+  <!-- Operation History Slide-Over Drawer -->
+  <aside id="historyDrawer" class="history-drawer">
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <h3>Operation History</h3>
+      </div>
+      <div class="drawer-header-actions">
+        <button id="clearHistoryBtn" class="btn btn-secondary btn-sm" title="Clear all history entries">Clear All</button>
+        <button id="closeHistoryBtn" class="btn-icon" title="Close history drawer">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div id="historyList" class="history-list"></div>
+  </aside>
+  <div id="drawerBackdrop" class="drawer-backdrop"></div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
 
   <script src="renderer.js"></script>
 </body>

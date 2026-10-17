@@ -28,6 +28,9 @@
     "productName": "PartX",
     "compression": "maximum",
     "asar": true,
+    "electronLanguages": [
+      "en-US"
+    ],
     "files": [
       "src/**/*",
       "build/icon.*",

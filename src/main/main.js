@@ -1,6 +1,13 @@
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, nativeTheme, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
+
+// Optimize Chromium startup and rendering performance
+app.commandLine.appendSwitch('disable-background-timer-throttling');
+app.commandLine.appendSwitch('disable-renderer-backgrounding');
+app.commandLine.appendSwitch('disable-breakpad');
+app.commandLine.appendSwitch('disable-component-update');
+
 const {
   splitFile,
   detectSplitParts,
@@ -57,11 +64,19 @@ function createWindow() {
     mainWindow.show();
   });
 
+  const onThemeUpdated = () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('theme:systemChanged', nativeTheme.shouldUseDarkColors ? 'dark' : 'light');
+    }
+  };
+  nativeTheme.on('updated', onThemeUpdated);
+
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
     console.error('Failed to load:', errorCode, errorDescription);
   });
 
   mainWindow.on('closed', () => {
+    nativeTheme.removeListener('updated', onThemeUpdated);
     mainWindow = null;
     if (activeController) {
       try { activeController.cancel(); } catch (_) {}
@@ -293,3 +308,57 @@ ipcMain.handle('op:computeChecksums', async (event, filePath) => {
     return { success: false, error: error.message };
   }
 });
+
+// Theme IPC Handlers
+ipcMain.handle('theme:getSystemTheme', () => {
+  return nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
+});
+
+ipcMain.handle('theme:setSource', (event, source) => {
+  if (['system', 'dark', 'light'].includes(source)) {
+    nativeTheme.themeSource = source;
+    return true;
+  }
+  return false;
+});
+
+// Native Notification Helper
+ipcMain.handle('notification:show', (event, { title, body }) => {
+  if (Notification.isSupported()) {
+    const iconPath = path.join(__dirname, '../../build/icon.png');
+    const notif = new Notification({
+      title: title || 'PartX',
+      body: body || '',
+      icon: fs.existsSync(iconPath) ? iconPath : undefined
+    });
+    notif.show();
+    return true;
+  }
+  return false;
+});
+
+// Safe batch file deletion (for cleaning up split parts after successful rejoining)
+ipcMain.handle('file:deleteFiles', async (event, filePaths) => {
+  if (!Array.isArray(filePaths)) return { success: false, error: 'Invalid file list' };
+  let deletedCount = 0;
+  for (const fp of filePaths) {
+    try {
+      if (fs.existsSync(fp)) {
+        fs.unlinkSync(fp);
+        deletedCount++;
+      }
+    } catch (_) {}
+  }
+  return { success: true, deletedCount };
+});
+
+// Write text file (e.g. exporting checksum files or manifests)
+ipcMain.handle('file:writeText', async (event, { filePath, content }) => {
+  try {
+    fs.writeFileSync(filePath, content, 'utf8');
+    return { success: true, filePath };
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+});
+

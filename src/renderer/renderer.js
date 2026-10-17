@@ -1,6 +1,18 @@
-// DOM Elements - Theme & Tabs
-const themeToggleBtn = document.getElementById('themeToggleBtn');
-const themeIcon = document.getElementById('themeIcon');
+// ============================================================
+// PARTX RENDERER - MODERN FLUENT ENGINE CONTROLLER
+// ============================================================
+
+// --- DOM ELEMENTS: HEADER & NAVIGATION ---
+const themeOptButtons = document.querySelectorAll('.theme-opt');
+const historyBtn = document.getElementById('historyBtn');
+const historyBadge = document.getElementById('historyBadge');
+const historyDrawer = document.getElementById('historyDrawer');
+const closeHistoryBtn = document.getElementById('closeHistoryBtn');
+const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+const historyList = document.getElementById('historyList');
+const drawerBackdrop = document.getElementById('drawerBackdrop');
+const toastContainer = document.getElementById('toastContainer');
+
 const tabSplitBtn = document.getElementById('tabSplitBtn');
 const tabJoinBtn = document.getElementById('tabJoinBtn');
 const tabChecksumBtn = document.getElementById('tabChecksumBtn');
@@ -8,7 +20,7 @@ const splitTab = document.getElementById('splitTab');
 const joinTab = document.getElementById('joinTab');
 const checksumTab = document.getElementById('checksumTab');
 
-// DOM Elements - Split Tab
+// --- DOM ELEMENTS: SPLIT TAB ---
 const splitDropzone = document.getElementById('splitDropzone');
 const splitFileBadge = document.getElementById('splitFileBadge');
 const splitFileName = document.getElementById('splitFileName');
@@ -21,9 +33,15 @@ const chunkSizeInput = document.getElementById('chunkSizeInput');
 const chunkSizeUnit = document.getElementById('chunkSizeUnit');
 const partsCountInput = document.getElementById('partsCountInput');
 const namingSchemeSelect = document.getElementById('namingSchemeSelect');
+const splitEstimatorBox = document.getElementById('splitEstimatorBox');
+const estimatorSummaryText = document.getElementById('estimatorSummaryText');
+const splitVisualStrip = document.getElementById('splitVisualStrip');
 const splitOutputDirInput = document.getElementById('splitOutputDirInput');
 const browseSplitOutputDirBtn = document.getElementById('browseSplitOutputDirBtn');
 const createManifestCheckbox = document.getElementById('createManifestCheckbox');
+const splitAutoOpenFolder = document.getElementById('splitAutoOpenFolder');
+const splitNotifyOnFinish = document.getElementById('splitNotifyOnFinish');
+
 const startSplitBtn = document.getElementById('startSplitBtn');
 const splitActionContainer = document.getElementById('splitActionContainer');
 const splitDashboard = document.getElementById('splitDashboard');
@@ -38,17 +56,22 @@ const cancelSplitBtn = document.getElementById('cancelSplitBtn');
 const splitAlert = document.getElementById('splitAlert');
 const splitLogBox = document.getElementById('splitLogBox');
 
-// DOM Elements - Join Tab
+// --- DOM ELEMENTS: JOIN TAB ---
 const joinDropzone = document.getElementById('joinDropzone');
 const joinFileBadge = document.getElementById('joinFileBadge');
 const joinFileName = document.getElementById('joinFileName');
 const joinFileMeta = document.getElementById('joinFileMeta');
 const clearJoinFileBtn = document.getElementById('clearJoinFileBtn');
 const detectedPartsContainer = document.getElementById('detectedPartsContainer');
+const detectedPartsSummary = document.getElementById('detectedPartsSummary');
 const detectedPartsTbody = document.getElementById('detectedPartsTbody');
 const joinOutputPathInput = document.getElementById('joinOutputPathInput');
 const browseJoinOutputPathBtn = document.getElementById('browseJoinOutputPathBtn');
 const joinExpectedShaInput = document.getElementById('joinExpectedShaInput');
+const joinAutoOpenFolder = document.getElementById('joinAutoOpenFolder');
+const joinNotifyOnFinish = document.getElementById('joinNotifyOnFinish');
+const joinDeletePartsCheckbox = document.getElementById('joinDeletePartsCheckbox');
+
 const startJoinBtn = document.getElementById('startJoinBtn');
 const joinActionContainer = document.getElementById('joinActionContainer');
 const joinDashboard = document.getElementById('joinDashboard');
@@ -63,7 +86,7 @@ const cancelJoinBtn = document.getElementById('cancelJoinBtn');
 const joinAlert = document.getElementById('joinAlert');
 const joinLogBox = document.getElementById('joinLogBox');
 
-// DOM Elements - Checksum Tab
+// --- DOM ELEMENTS: CHECKSUM TAB ---
 const checksumDropzone = document.getElementById('checksumDropzone');
 const checksumFileBadge = document.getElementById('checksumFileBadge');
 const checksumFileName = document.getElementById('checksumFileName');
@@ -79,12 +102,14 @@ const hashMd5Input = document.getElementById('hashMd5Input');
 const copySha256Btn = document.getElementById('copySha256Btn');
 const copySha1Btn = document.getElementById('copySha1Btn');
 const copyMd5Btn = document.getElementById('copyMd5Btn');
+const copyAllHashesBtn = document.getElementById('copyAllHashesBtn');
+const exportChecksumBtn = document.getElementById('exportChecksumBtn');
 const compareHashInput = document.getElementById('compareHashInput');
 const compareHashBtn = document.getElementById('compareHashBtn');
 const compareResultBadge = document.getElementById('compareResultBadge');
 
-// Operational State
-let currentTheme = 'dark';
+// --- OPERATIONAL STATE ---
+let currentThemePreference = localStorage.getItem('partx_theme_pref') || 'system';
 let activeSplitFile = null;
 let activeJoinPartsInfo = null;
 let activeChecksumFile = null;
@@ -92,28 +117,204 @@ let computedHashes = null;
 let isOperationPaused = false;
 let currentOperationType = null; // 'split' | 'join' | 'checksum' | null
 
-// Theme Toggle
-themeToggleBtn.addEventListener('click', () => {
-  currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-  document.documentElement.setAttribute('data-theme', currentTheme);
-  if (currentTheme === 'light') {
-    themeIcon.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
-  } else {
-    themeIcon.innerHTML = `
-      <circle cx="12" cy="12" r="5"></circle>
-      <line x1="12" y1="1" x2="12" y2="3"></line>
-      <line x1="12" y1="21" x2="12" y2="23"></line>
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-      <line x1="1" y1="12" x2="3" y2="12"></line>
-      <line x1="21" y1="12" x2="23" y2="12"></line>
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-    `;
+// ============================================================
+// 1. THEME MANAGEMENT (SYSTEM, DARK, LIGHT)
+// ============================================================
+
+async function applyTheme(pref) {
+  currentThemePreference = pref;
+  localStorage.setItem('partx_theme_pref', pref);
+
+  themeOptButtons.forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-theme-val') === pref);
+  });
+
+  if (window.api && window.api.setThemeSource) {
+    await window.api.setThemeSource(pref);
+  }
+
+  let effectiveTheme = pref;
+  if (pref === 'system') {
+    if (window.api && window.api.getSystemTheme) {
+      effectiveTheme = await window.api.getSystemTheme();
+    } else {
+      effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+  }
+
+  document.documentElement.setAttribute('data-theme', effectiveTheme);
+}
+
+themeOptButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const val = btn.getAttribute('data-theme-val');
+    applyTheme(val);
+  });
+});
+
+if (window.api && window.api.onSystemThemeChanged) {
+  window.api.onSystemThemeChanged((systemTheme) => {
+    if (currentThemePreference === 'system') {
+      document.documentElement.setAttribute('data-theme', systemTheme);
+    }
+  });
+}
+
+// Media query fallback for system theme changes
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+  if (currentThemePreference === 'system') {
+    document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
   }
 });
 
-// Tab Navigation
+// Initialize theme on load
+applyTheme(currentThemePreference);
+
+// ============================================================
+// 2. TOAST NOTIFICATIONS & NATIVE ALERTS
+// ============================================================
+
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `<span>${message}</span>`;
+  toastContainer.appendChild(toast);
+
+  // Trigger reflow & show
+  requestAnimationFrame(() => toast.classList.add('show'));
+
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 3200);
+}
+
+function notifyUser(title, body) {
+  if (window.api && window.api.showNotification) {
+    window.api.showNotification({ title, body });
+  }
+}
+
+// ============================================================
+// 3. OPERATION HISTORY DRAWER
+// ============================================================
+
+const HISTORY_STORAGE_KEY = 'partx_history_v1';
+
+function getHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY)) || [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function saveHistory(list) {
+  localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(list.slice(0, 50)));
+  updateHistoryBadge();
+}
+
+function addHistoryItem(item) {
+  const list = getHistory();
+  const newItem = {
+    id: Date.now().toString(),
+    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    date: new Date().toLocaleDateString(),
+    ...item
+  };
+  list.unshift(newItem);
+  saveHistory(list);
+  renderHistory();
+}
+
+function updateHistoryBadge() {
+  const list = getHistory();
+  if (list.length > 0) {
+    historyBadge.textContent = list.length > 99 ? '99+' : list.length;
+    historyBadge.style.display = 'inline-block';
+  } else {
+    historyBadge.style.display = 'none';
+  }
+}
+
+function renderHistory() {
+  const list = getHistory();
+  historyList.innerHTML = '';
+
+  if (list.length === 0) {
+    historyList.innerHTML = `
+      <div class="history-empty">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 10px; display: block; opacity: 0.4;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <p>No recent operations recorded yet.</p>
+      </div>
+    `;
+    return;
+  }
+
+  list.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'history-card';
+    card.innerHTML = `
+      <div class="history-card-top">
+        <span class="history-type-badge history-type-${item.type}">${item.type}</span>
+        <span class="history-time">${item.date} ${item.timestamp}</span>
+      </div>
+      <div class="history-file-title" title="${item.fileName}">${item.fileName}</div>
+      <div class="history-details">${item.details}</div>
+      ${item.hash ? `<div class="history-details font-mono" style="opacity: 0.75; font-size: 10px;" title="${item.hash}">SHA: ${item.hash.substring(0, 16)}...</div>` : ''}
+      <div class="history-actions">
+        ${item.targetPath ? `<button class="btn btn-secondary btn-sm reveal-btn" data-path="${item.targetPath}">Open Folder</button>` : ''}
+        ${item.hash ? `<button class="btn btn-secondary btn-sm copy-hash-btn" data-hash="${item.hash}">Copy Hash</button>` : ''}
+      </div>
+    `;
+
+    const revealBtn = card.querySelector('.reveal-btn');
+    if (revealBtn) {
+      revealBtn.addEventListener('click', () => {
+        window.api.showItemInFolder(item.targetPath);
+      });
+    }
+
+    const copyBtn = card.querySelector('.copy-hash-btn');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', async () => {
+        await navigator.clipboard.writeText(item.hash);
+        showToast('SHA-256 copied to clipboard', 'success');
+      });
+    }
+
+    historyList.appendChild(card);
+  });
+}
+
+function toggleHistoryDrawer(open) {
+  historyDrawer.classList.toggle('open', open);
+  drawerBackdrop.classList.toggle('active', open);
+  if (open) renderHistory();
+}
+
+historyBtn.addEventListener('click', () => toggleHistoryDrawer(true));
+closeHistoryBtn.addEventListener('click', () => toggleHistoryDrawer(false));
+drawerBackdrop.addEventListener('click', () => toggleHistoryDrawer(false));
+
+clearHistoryBtn.addEventListener('click', () => {
+  if (confirm('Clear all operation history?')) {
+    localStorage.removeItem(HISTORY_STORAGE_KEY);
+    renderHistory();
+    updateHistoryBadge();
+    showToast('History cleared', 'info');
+  }
+});
+
+updateHistoryBadge();
+
+// ============================================================
+// 4. TAB NAVIGATION
+// ============================================================
+
 function switchTab(target) {
   tabSplitBtn.classList.toggle('active', target === 'split');
   tabJoinBtn.classList.toggle('active', target === 'join');
@@ -127,7 +328,85 @@ tabSplitBtn.addEventListener('click', () => switchTab('split'));
 tabJoinBtn.addEventListener('click', () => switchTab('join'));
 tabChecksumBtn.addEventListener('click', () => switchTab('checksum'));
 
-// Quick Preset Chips for Chunk Size
+// Format utilities
+function formatTime(seconds) {
+  if (!seconds || seconds <= 0 || !isFinite(seconds)) return '--:--';
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+}
+
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function showAlert(el, message, type = 'danger') {
+  el.className = `alert-box alert-${type}`;
+  el.textContent = message;
+  el.style.display = 'block';
+}
+
+function hideAlert(el) {
+  el.style.display = 'none';
+  el.textContent = '';
+}
+
+function appendLog(box, message) {
+  box.style.display = 'flex';
+  const item = document.createElement('div');
+  item.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+  box.appendChild(item);
+  box.scrollTop = box.scrollHeight;
+}
+
+// Drag & drop helper
+function setupDropzone(zone, onFileDropped) {
+  zone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    zone.classList.add('drag-over');
+  });
+
+  zone.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    zone.classList.remove('drag-over');
+  });
+
+  zone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    zone.classList.remove('drag-over');
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      onFileDropped(e.dataTransfer.files[0]);
+    }
+  });
+}
+
+// ============================================================
+// 5. SPLIT TAB LOGIC & CHUNK VISUALIZER
+// ============================================================
+
+// Radio switch: size vs count
+splitModeRadios.forEach(radio => {
+  radio.addEventListener('change', (e) => {
+    if (e.target.value === 'size') {
+      chunkSizeGroup.style.display = 'flex';
+      partsCountGroup.style.display = 'none';
+    } else {
+      chunkSizeGroup.style.display = 'none';
+      partsCountGroup.style.display = 'flex';
+    }
+    updateSplitEstimator();
+  });
+});
+
+// Presets
 document.querySelectorAll('.preset-chip').forEach(chip => {
   chip.addEventListener('click', () => {
     const val = chip.getAttribute('data-val');
@@ -140,68 +419,68 @@ document.querySelectorAll('.preset-chip').forEach(chip => {
       chunkSizeGroup.style.display = 'flex';
       partsCountGroup.style.display = 'none';
     }
+    updateSplitEstimator();
   });
 });
 
-// Format Seconds into mm:ss
-function formatTime(seconds) {
-  if (!seconds || seconds <= 0 || !isFinite(seconds)) return '--:--';
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-}
+// Update visual preview of chunks
+function updateSplitEstimator() {
+  if (!activeSplitFile || activeSplitFile.size <= 0) {
+    splitEstimatorBox.style.display = 'none';
+    return;
+  }
 
-// Format Bytes
-function formatBytes(bytes) {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
+  const fileSize = activeSplitFile.size;
+  const splitMode = document.querySelector('input[name="splitMode"]:checked').value;
+  let totalParts = 0;
+  let chunkSizeBytes = 0;
 
-// Notification Alert Helper
-function showAlert(el, message, type = 'danger') {
-  el.className = `alert-box alert-${type}`;
-  el.textContent = message;
-  el.style.display = 'block';
-}
-
-function hideAlert(el) {
-  el.style.display = 'none';
-  el.textContent = '';
-}
-
-// Append log item
-function appendLog(box, message) {
-  box.style.display = 'flex';
-  const item = document.createElement('div');
-  item.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-  box.appendChild(item);
-  box.scrollTop = box.scrollHeight;
-}
-
-// --- SPLIT TAB LOGIC ---
-
-splitModeRadios.forEach(radio => {
-  radio.addEventListener('change', (e) => {
-    if (e.target.value === 'size') {
-      chunkSizeGroup.style.display = 'flex';
-      partsCountGroup.style.display = 'none';
-    } else {
-      chunkSizeGroup.style.display = 'none';
-      partsCountGroup.style.display = 'flex';
+  if (splitMode === 'size') {
+    const val = parseFloat(chunkSizeInput.value) || 0;
+    const unit = chunkSizeUnit.value;
+    const multipliers = { KB: 1024, MB: 1024 * 1024, GB: 1024 * 1024 * 1024 };
+    chunkSizeBytes = Math.round(val * (multipliers[unit] || 1024 * 1024));
+    if (chunkSizeBytes <= 0) {
+      splitEstimatorBox.style.display = 'none';
+      return;
     }
-  });
-});
+    totalParts = Math.ceil(fileSize / chunkSizeBytes);
+  } else {
+    totalParts = parseInt(partsCountInput.value, 10) || 0;
+    if (totalParts < 2) {
+      splitEstimatorBox.style.display = 'none';
+      return;
+    }
+    chunkSizeBytes = Math.ceil(fileSize / totalParts);
+  }
 
-// Split File Pickers
+  if (totalParts <= 0) return;
+
+  splitEstimatorBox.style.display = 'flex';
+  estimatorSummaryText.textContent = `${totalParts} part(s) (~${formatBytes(chunkSizeBytes)} each)`;
+
+  // Render visual strip (cap at 16 chunks for UI neatness)
+  splitVisualStrip.innerHTML = '';
+  const displayPartsCount = Math.min(totalParts, 16);
+  for (let i = 1; i <= displayPartsCount; i++) {
+    const chunkDiv = document.createElement('div');
+    chunkDiv.className = 'visual-chunk';
+    chunkDiv.textContent = `#${i}`;
+    chunkDiv.title = `Part ${i} of ${totalParts}`;
+    splitVisualStrip.appendChild(chunkDiv);
+  }
+}
+
+chunkSizeInput.addEventListener('input', updateSplitEstimator);
+chunkSizeUnit.addEventListener('change', updateSplitEstimator);
+partsCountInput.addEventListener('input', updateSplitEstimator);
+
+// Split File Selection
 splitDropzone.addEventListener('click', async () => {
   const file = await window.api.openFile();
   if (file) handleSelectedSplitFile(file);
 });
 
-// Drag and drop for Split
 setupDropzone(splitDropzone, async (droppedFile) => {
   const meta = await window.api.getFileMeta(droppedFile.path);
   if (meta && !meta.isDirectory) {
@@ -224,12 +503,14 @@ function handleSelectedSplitFile(file) {
     splitOutputDirInput.value = parentDir;
   }
   startSplitBtn.disabled = false;
+  updateSplitEstimator();
 }
 
 clearSplitFileBtn.addEventListener('click', () => {
   activeSplitFile = null;
   splitFileBadge.style.display = 'none';
   splitDropzone.style.display = 'flex';
+  splitEstimatorBox.style.display = 'none';
   startSplitBtn.disabled = true;
   hideAlert(splitAlert);
 });
@@ -301,17 +582,39 @@ startSplitBtn.addEventListener('click', async () => {
   splitActionContainer.style.display = 'flex';
 
   if (result.success) {
+    const res = result.result;
     showAlert(
       splitAlert,
-      `Successfully split "${result.result.originalFile}" into ${result.result.totalParts} parts! SHA-256: ${result.result.sha256}`,
+      `Successfully split "${res.originalFile}" into ${res.totalParts} parts! SHA-256: ${res.sha256}`,
       'success'
     );
+    showToast(`Split complete: Created ${res.totalParts} parts`, 'success');
+
+    // Add to history
+    addHistoryItem({
+      type: 'split',
+      fileName: res.originalFile,
+      details: `${res.totalParts} parts • ${formatBytes(res.originalSize)}`,
+      targetPath: outputDir,
+      hash: res.sha256
+    });
+
+    // Native notification
+    if (splitNotifyOnFinish.checked) {
+      notifyUser('PartX - File Split Complete', `"${res.originalFile}" was split into ${res.totalParts} parts.`);
+    }
+
+    // Auto-open destination folder
+    if (splitAutoOpenFolder.checked) {
+      window.api.showItemInFolder(res.manifestPath || outputDir);
+    }
   } else {
     showAlert(splitAlert, `Split failed: ${result.error}`, 'danger');
+    showToast('Split failed: ' + result.error, 'danger');
   }
 });
 
-// Split Pause / Resume / Cancel
+// Pause / Resume / Cancel for Split
 pauseSplitBtn.addEventListener('click', async () => {
   if (isOperationPaused) {
     await window.api.resumeOperation();
@@ -331,7 +634,9 @@ cancelSplitBtn.addEventListener('click', async () => {
   splitProgressStatus.textContent = 'Cancelling...';
 });
 
-// --- JOIN TAB LOGIC ---
+// ============================================================
+// 6. JOIN TAB LOGIC
+// ============================================================
 
 joinDropzone.addEventListener('click', async () => {
   const file = await window.api.openFile();
@@ -358,6 +663,7 @@ async function handleSelectedJoinFile(filePath) {
 
   joinFileName.textContent = detection.baseOriginalName;
   joinFileMeta.textContent = `Found ${detection.totalParts} part(s) • Total: ${formatBytes(detection.totalCalculatedSize)}`;
+  detectedPartsSummary.textContent = `${detection.totalParts} parts (${formatBytes(detection.totalCalculatedSize)})`;
 
   // Populate parts table
   detection.parts.forEach(p => {
@@ -378,7 +684,7 @@ async function handleSelectedJoinFile(filePath) {
   // Pre-fill manifest SHA-256 if discovered
   if (detection.expectedSha256) {
     joinExpectedShaInput.value = detection.expectedSha256;
-    showAlert(joinAlert, `Found SHA-256 manifest: Automatically populated expected hash.`, 'warning');
+    showAlert(joinAlert, `Found SHA-256 manifest: Auto-populated expected hash.`, 'warning');
   } else {
     joinExpectedShaInput.value = '';
   }
@@ -387,7 +693,7 @@ async function handleSelectedJoinFile(filePath) {
   if (detection.missingParts && detection.missingParts.length > 0) {
     showAlert(
       joinAlert,
-      `WARNING: Missing part(s) detected: [${detection.missingParts.join(', ')}]. Joining will result in corrupted output!`,
+      `WARNING: Missing part(s) detected: [${detection.missingParts.join(', ')}]. Joining will produce a corrupted file!`,
       'danger'
     );
     startJoinBtn.disabled = true;
@@ -446,22 +752,60 @@ startJoinBtn.addEventListener('click', async () => {
   joinActionContainer.style.display = 'flex';
 
   if (result.success) {
-    let msg = `Successfully joined file into "${outputPath}" (${formatBytes(result.result.totalSize)}). SHA-256: ${result.result.actualSha256}`;
-    if (result.result.hashVerified === true) {
-      msg += `\nIntegrity Verified: SHA-256 matches expected checksum!`;
+    const res = result.result;
+    let msg = `Successfully joined file into "${outputPath}" (${formatBytes(res.totalSize)}). SHA-256: ${res.actualSha256}`;
+    
+    if (res.hashVerified === true) {
+      msg += `\nIntegrity Verified: SHA-256 matches manifest perfectly!`;
       showAlert(joinAlert, msg, 'success');
-    } else if (result.result.hashVerified === false) {
+      showToast('Recombine complete: Hash verified 100%!', 'success');
+    } else if (res.hashVerified === false) {
       msg += `\nWARNING: Checksum mismatch! Recombined file may be corrupted.`;
       showAlert(joinAlert, msg, 'danger');
+      showToast('Checksum mismatch detected!', 'danger');
     } else {
       showAlert(joinAlert, msg, 'success');
+      showToast('File recombined successfully!', 'success');
+    }
+
+    // Add to history
+    addHistoryItem({
+      type: 'join',
+      fileName: activeJoinPartsInfo.baseOriginalName,
+      details: `${activeJoinPartsInfo.totalParts} parts -> ${formatBytes(res.totalSize)}`,
+      targetPath: outputPath,
+      hash: res.actualSha256
+    });
+
+    // Native notification
+    if (joinNotifyOnFinish.checked) {
+      notifyUser('PartX - File Join Complete', `Recombined into "${activeJoinPartsInfo.baseOriginalName}".`);
+    }
+
+    // Auto-clean source parts if option checked & verified
+    if (joinDeletePartsCheckbox.checked) {
+      if (res.hashVerified !== false) {
+        const toDelete = activeJoinPartsInfo.parts.map(p => p.fullPath);
+        if (confirm(`Successfully rejoined! Delete ${toDelete.length} original split parts to reclaim disk space?`)) {
+          const delRes = await window.api.deleteFiles(toDelete);
+          if (delRes.success) {
+            showToast(`Deleted ${delRes.deletedCount} source part files`, 'info');
+          }
+        }
+      }
+    }
+
+    // Auto-open destination folder
+    if (joinAutoOpenFolder.checked) {
+      window.api.showItemInFolder(outputPath);
     }
   } else {
     showAlert(joinAlert, `Join failed: ${result.error}`, 'danger');
+    showToast('Join failed: ' + result.error, 'danger');
   }
 });
 
-// Join Pause / Resume / Cancel
+// Pause / Resume / Cancel for Join
 pauseJoinBtn.addEventListener('click', async () => {
   if (isOperationPaused) {
     await window.api.resumeOperation();
@@ -481,7 +825,9 @@ cancelJoinBtn.addEventListener('click', async () => {
   joinProgressStatus.textContent = 'Cancelling...';
 });
 
-// --- REAL-TIME EVENT HOOKS ---
+// ============================================================
+// 7. REAL-TIME EVENT HOOKS
+// ============================================================
 
 window.api.onProgress((data) => {
   const percentText = `${Math.floor(data.percent)}%`;
@@ -512,33 +858,9 @@ window.api.onLog((data) => {
   }
 });
 
-// Drag & drop helper
-function setupDropzone(zone, onFileDropped) {
-  zone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    zone.classList.add('drag-over');
-  });
-
-  zone.addEventListener('dragleave', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    zone.classList.remove('drag-over');
-  });
-
-  zone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    zone.classList.remove('drag-over');
-
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const droppedFile = e.dataTransfer.files[0];
-      onFileDropped(droppedFile);
-    }
-  });
-}
-
-// --- CHECKSUM / VERIFY TAB LOGIC ---
+// ============================================================
+// 8. CHECKSUM TAB LOGIC & EXPORT
+// ============================================================
 
 checksumDropzone.addEventListener('click', async () => {
   const file = await window.api.openFile();
@@ -589,6 +911,16 @@ async function handleSelectedChecksumFile(file) {
     hashSha1Input.value = computedHashes.sha1;
     hashMd5Input.value = computedHashes.md5;
     checksumResultsCard.style.display = 'block';
+    showToast('Hashes calculated successfully!', 'success');
+
+    // Add to history
+    addHistoryItem({
+      type: 'checksum',
+      fileName: file.name,
+      details: `${file.formattedSize || formatBytes(file.size)}`,
+      targetPath: file.path,
+      hash: computedHashes.sha256
+    });
   } else {
     alert(`Failed to calculate checksum: ${res.error}`);
     clearChecksumFileBtn.click();
@@ -596,22 +928,49 @@ async function handleSelectedChecksumFile(file) {
 }
 
 // Copy Buttons
-function setupCopyBtn(btn, inputEl) {
+function setupCopyBtn(btn, inputEl, label) {
   btn.addEventListener('click', async () => {
     const val = inputEl.value;
     if (!val) return;
-    try {
-      await navigator.clipboard.writeText(val);
-      const originalText = btn.textContent;
-      btn.textContent = 'Copied!';
-      setTimeout(() => { btn.textContent = originalText; }, 1500);
-    } catch (_) {}
+    await navigator.clipboard.writeText(val);
+    showToast(`${label} copied to clipboard`, 'success');
   });
 }
 
-setupCopyBtn(copySha256Btn, hashSha256Input);
-setupCopyBtn(copySha1Btn, hashSha1Input);
-setupCopyBtn(copyMd5Btn, hashMd5Input);
+setupCopyBtn(copySha256Btn, hashSha256Input, 'SHA-256');
+setupCopyBtn(copySha1Btn, hashSha1Input, 'SHA-1');
+setupCopyBtn(copyMd5Btn, hashMd5Input, 'MD5');
+
+// Copy All Hashes
+copyAllHashesBtn.addEventListener('click', async () => {
+  if (!computedHashes || !activeChecksumFile) return;
+  const content = [
+    `File: ${activeChecksumFile.name}`,
+    `Size: ${activeChecksumFile.formattedSize || formatBytes(activeChecksumFile.size)}`,
+    `SHA-256: ${computedHashes.sha256}`,
+    `SHA-1:   ${computedHashes.sha1}`,
+    `MD5:     ${computedHashes.md5}`
+  ].join('\r\n');
+
+  await navigator.clipboard.writeText(content);
+  showToast('All hashes copied to clipboard', 'success');
+});
+
+// Export .sha256 manifest
+exportChecksumBtn.addEventListener('click', async () => {
+  if (!computedHashes || !activeChecksumFile) return;
+  const defaultManifestName = `${activeChecksumFile.name}.sha256`;
+  const savePath = await window.api.saveFile(defaultManifestName);
+  if (!savePath) return;
+
+  const manifestContent = `${computedHashes.sha256} *${activeChecksumFile.name}\r\n`;
+  const writeRes = await window.api.writeText({ filePath: savePath, content: manifestContent });
+  if (writeRes.success) {
+    showToast(`Manifest saved: ${defaultManifestName}`, 'success');
+  } else {
+    alert(`Failed to save manifest: ${writeRes.error}`);
+  }
+});
 
 // Compare Hashes
 compareHashBtn.addEventListener('click', () => {
@@ -626,19 +985,22 @@ compareHashBtn.addEventListener('click', () => {
   if (input === computedHashes.sha256) {
     compareResultBadge.className = 'alert-box alert-success';
     compareResultBadge.textContent = 'MATCH: Input exactly matches computed SHA-256!';
+    showToast('Match: SHA-256 verified!', 'success');
   } else if (input === computedHashes.sha1) {
     compareResultBadge.className = 'alert-box alert-success';
     compareResultBadge.textContent = 'MATCH: Input exactly matches computed SHA-1!';
+    showToast('Match: SHA-1 verified!', 'success');
   } else if (input === computedHashes.md5) {
     compareResultBadge.className = 'alert-box alert-success';
     compareResultBadge.textContent = 'MATCH: Input exactly matches computed MD5!';
+    showToast('Match: MD5 verified!', 'success');
   } else {
     compareResultBadge.className = 'alert-box alert-danger';
-    compareResultBadge.textContent = 'MISMATCH: Input does NOT match any of SHA-256, SHA-1, or MD5 checksums.';
+    compareResultBadge.textContent = 'MISMATCH: Input does NOT match any computed hash (SHA-256, SHA-1, MD5).';
+    showToast('Mismatch: Hash does not match!', 'danger');
   }
 });
 
-// Checksum real-time progress
 window.api.onChecksumProgress((data) => {
   const percentText = `${Math.floor(data.percent)}%`;
   checksumProgressBar.style.width = `${data.percent}%`;
